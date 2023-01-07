@@ -5,13 +5,20 @@
   "main": "app.js",
   "scripts": {
     "build": "yarn tsc",
-    "start": "node dist/app.ts",
-    "dev": "concurrently \"yarn tsc --watch\" \"nodemon -q dist/app.js\""
+    "start": "node dist/app.js",
+    "dev": "concurrently \"yarn tsc --watch\" \"nodemon -q dist/app.js\"",
+    "container:init": "docker volume create postgres-data",
+    "container:start": "docker compose up -d",
+    "container:stop": "docker compose down",
+    "container:restart": "yarn container:stop && yarn container:start",
+    "db:dev:migrate": "docker exec -it app sh -c \"yarn prisma migrate dev\"",
+    "db:dev:studio": "docker exec -it app sh -c \"yarn prisma studio\""
   },
   "keywords": [],
   "author": "",
   "license": "UNLICENSED",
   "dependencies": {
+    "@prisma/client": "^4.8.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2"
   },
@@ -21,6 +28,7 @@
     "@types/node": "^18.11.18",
     "concurrently": "^7.6.0",
     "nodemon": "^2.0.20",
+    "prisma": "^4.8.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
   }

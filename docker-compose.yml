@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: app
+    restart: on-failure
+    depends_on:
+      - postgres
+    image: node:18-alpine
+    ports:
+      - "3000:3000"
+      - "5555:5555" # prisma studio
+    working_dir: /app
+    volumes:
+      - .:/app/
+    command: sh -c "yarn && yarn dev"
+    environment:
+      NODE_ENV: development
+      APP_PORT: 3000
+      DATABASE_URL: postgresql://user:password@postgres:5432/db?schema=public
+
+  postgres:
+    container_name: postgres
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+
+volumes:
+  postgres-data:
