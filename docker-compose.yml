@@ -13,14 +13,18 @@ services:
     working_dir: /app
     volumes:
       - .:/app/
-    command: sh -c "yarn && yarn dev"
+      - /app/node_modules/
+    command: sh -c "yarn && yarn prisma migrate dev && yarn prisma generate && yarn dev"
     environment:
       NODE_ENV: development
       APP_PORT: 3000
       DATABASE_URL: postgresql://user:password@postgres:5432/db?schema=public
+      JWT_ISSUER: mytube
+      JWT_SECRET: secret
 
   postgres:
     container_name: postgres
+    restart: on-failure
     image: postgres:15
     ports:
       - "5432:5432"
