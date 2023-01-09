@@ -70,4 +70,8 @@ export const login = async (req: Request, res: Response) => {
     }
 }
 
-export const getUser = (req: Request, res: Response) => res.json(instanceToPlain(new UserResource(req.user as User)))
+export const getUser = (req: Request, res: Response) => {
+    const user = instanceToPlain(new UserResource(req.user as User))
+
+    return res.json(user)
+}

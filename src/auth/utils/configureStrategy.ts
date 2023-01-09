@@ -9,7 +9,7 @@ const options: StrategyOptions = {
     secretOrKey: process.env.JWT_SECRET,
 }
 
-export const configureStrategy = (passport: PassportStatic) => passport.use(new Strategy(options, async (payload: JwtPayload, done) => {
+const strategy = new Strategy(options, async (payload: JwtPayload, done) => {
     try {
         const sub = payload.sub
 
@@ -31,4 +31,6 @@ export const configureStrategy = (passport: PassportStatic) => passport.use(new 
     } catch (error) {
         return done(error, false)
     }
-}))
+})
+
+export const configureStrategy = (passport: PassportStatic) => passport.use(strategy)
