@@ -1,20 +1,20 @@
 import { Exclude } from 'class-transformer';
 
 export class UserResource {
-    id?: number
+    id: number
 
-    name?: string
+    name: string
 
-    email?: string
+    email: string
 
     @Exclude()
-    password?: string
+    password: string
 
-    createdAt?: Date
+    createdAt: Date
 
-    updatedAt?: Date
+    updatedAt: Date
 
-    constructor(partial: Partial<UserResource>) {
-        Object.assign(this, partial)
+    constructor(data: Partial<UserResource>) {
+        Object.assign(this, data)
     }
 }

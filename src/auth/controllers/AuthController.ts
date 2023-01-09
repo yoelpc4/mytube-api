@@ -2,10 +2,11 @@ import { User } from '@prisma/client'
 import { Request, Response } from 'express'
 import { validationResult } from 'express-validator'
 import { StatusCodes } from 'http-status-codes'
-import { instanceToPlain } from 'class-transformer';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { AuthService } from '../services';
 import { UnauthorizedException } from '../../common/exceptions';
 import { UserResource } from '../resources';
+import { LoginDto, RegisterDto } from '../dto';
 
 const authService = new AuthService()
 
@@ -19,8 +20,10 @@ export const register = async (req: Request, res: Response) => {
         })
     }
 
+    const dto = plainToInstance(RegisterDto, req.body, { excludeExtraneousValues: true })
+
     try {
-        const accessToken = await authService.register(req.body)
+        const accessToken = await authService.register(dto)
 
         return res.status(StatusCodes.CREATED).json({
             accessToken,
@@ -44,8 +47,10 @@ export const login = async (req: Request, res: Response) => {
         })
     }
 
+    const dto = plainToInstance(LoginDto, req.body, { excludeExtraneousValues: true })
+
     try {
-        const accessToken = await authService.login(req.body)
+        const accessToken = await authService.login(dto)
 
         return res.status(StatusCodes.OK).json({
             accessToken,
