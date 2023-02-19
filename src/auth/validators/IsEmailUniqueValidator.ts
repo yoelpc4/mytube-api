@@ -1,13 +1,13 @@
 import { CustomValidator } from 'express-validator';
 import { prisma } from '../../common/services';
 
-export const IsEmailUniqueValidator: CustomValidator = async value => {
+export const IsEmailUniqueValidator: CustomValidator = async input => {
     const user = await prisma.user.findUnique({
         select: {
             id: true,
         },
         where: {
-            email: value,
+            email: input,
         },
     })
 

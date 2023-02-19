@@ -11,12 +11,34 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(255)
+  email     String    @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Content   Content[]
 
   @@map("users")
+}
+
+model Content {
+  id                Int           @id @default(autoincrement())
+  title             String        @db.VarChar(255)
+  description       String?
+  videoBasename     String        @db.VarChar(255)
+  tags              String?       @db.VarChar(255)
+  status            ContentStatus @default(DRAFT)
+  thumbnailBasename String?       @db.VarChar(255)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  createdBy         User          @relation(fields: [createdById], references: [id])
+  createdById       Int
+
+  @@map("contents")
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
 }

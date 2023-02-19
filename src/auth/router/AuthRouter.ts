@@ -9,9 +9,9 @@ const router = Router()
 router.post(
     '/register',
     body('name').notEmpty().bail().isString().bail().trim(),
-    body('email').notEmpty().bail().isEmail().bail().custom(IsEmailUniqueValidator).trim().normalizeEmail(),
+    body('email').notEmpty().bail().isEmail().bail().custom(IsEmailUniqueValidator).bail().trim().normalizeEmail(),
     body('password').notEmpty().bail().isLength({ min: 8 }).bail().trim(),
-    body('passwordConfirmation').notEmpty().bail().custom(IsPasswordConfirmationMatchValidator).bail(),
+    body('passwordConfirmation').notEmpty().bail().custom(IsPasswordConfirmationMatchValidator),
     register
 )
 router.post(

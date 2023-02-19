@@ -71,7 +71,7 @@ export const login = async (req: Request, res: Response) => {
 }
 
 export const getUser = (req: Request, res: Response) => {
-    const user = instanceToPlain(new UserResource(req.user as User))
+    const userResource = instanceToPlain(new UserResource(req.user as User))
 
-    return res.json(user)
+    return res.json(userResource)
 }
