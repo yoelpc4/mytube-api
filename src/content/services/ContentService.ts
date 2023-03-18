@@ -1,14 +1,14 @@
-import { Prisma, User } from '@prisma/client';
+import { Prisma, User, ContentStatus } from '@prisma/client';
 import { rm, stat } from 'fs/promises';
 import { cwd } from 'process'
 import { extname, join } from 'path';
 import pick from 'lodash/pick'
-import { CreateContentDto, GetContentsDto, UpdateContentDto } from '../dto';
+import { CreateContentDto, GetContentsDto, GetPublishedContentsDto, UpdateContentDto } from '../dto';
 import { prisma } from '../../common/services';
 import { NotFoundException } from '../../common/exceptions';
 
 export class ContentService {
-    async getContents(user: User, dto: GetContentsDto) {
+    async getContents(dto: GetContentsDto, user: User) {
         const findManyArgs: Prisma.ContentFindManyArgs = {
             where: {
                 createdById: user.id,
@@ -19,17 +19,59 @@ export class ContentService {
 
         if (dto.sort) {
             findManyArgs.orderBy = {
+                ...findManyArgs.orderBy,
                 [dto.sort.field]: dto.sort.order
             }
         }
 
         const contents = await prisma.content.findMany(findManyArgs)
 
-        const count = await prisma.content.count(pick(findManyArgs, ['where']))
+        const total = await prisma.content.count(pick(findManyArgs, ['where']))
 
         return {
             contents,
-            count,
+            total,
+        }
+    }
+
+    async getPublishedContents(dto: GetPublishedContentsDto) {
+        const findManyArgs: Prisma.ContentFindManyArgs = {
+            include: {
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+            where: {
+              status: ContentStatus.PUBLISHED,
+            },
+            take: +(dto.take ?? 10),
+        }
+
+        if (dto.cursor) {
+            findManyArgs.cursor = {
+                id: dto.cursor,
+            }
+
+            findManyArgs.skip = 1
+        }
+
+        if (dto.sort) {
+            findManyArgs.orderBy = {
+                ...findManyArgs.orderBy,
+                [dto.sort.field]: dto.sort.order
+            }
+        }
+
+        const contents = await prisma.content.findMany(findManyArgs)
+
+        const total = await prisma.content.count(pick(findManyArgs, ['where']))
+
+        return {
+            contents,
+            total,
         }
     }
 
@@ -55,6 +97,14 @@ export class ContentService {
 
     async findContent(id: number) {
         const content = await prisma.content.findUnique({
+            include: {
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
             where: {
                 id,
             },

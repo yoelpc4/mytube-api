@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { validationResult } from 'express-validator';
 import { ContentService } from '../services';
-import { CreateContentDto, GetContentsDto, UpdateContentDto } from '../dto';
+import { CreateContentDto, GetContentsDto, GetPublishedContentsDto, UpdateContentDto } from '../dto';
 import { ContentResource } from '../resources';
 import { NotFoundException } from '../../common/exceptions';
 import { PaginationResource } from '../../common/resources';
@@ -24,16 +24,53 @@ export const getContents = async (req: Request, res: Response) => {
     const dto = plainToInstance(GetContentsDto, req.query, { excludeExtraneousValues: true })
 
     try {
-        const { contents, count } = await contentService.getContents(req.user as User, dto)
+        const { contents, total } = await contentService.getContents(dto, req.user as User)
 
         const data = contents.map(content => instanceToPlain(new ContentResource(content)))
 
-        return res.status(StatusCodes.OK).json(instanceToPlain(new PaginationResource(data, dto.skip, dto.take, count)))
+        return res.status(StatusCodes.OK).json(instanceToPlain(new PaginationResource({
+            data,
+            total,
+            take: dto.take,
+            skip: dto.skip,
+        })))
     } catch (error) {
         console.log(error)
 
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             message: 'Get contents failed'
+        })
+    }
+}
+
+export const getPublishedContents = async (req: Request, res: Response) => {
+    const errors = validationResult(req)
+
+    if (! errors.isEmpty()) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            message: 'Please fix the following errors',
+            errors: errors.array(),
+        })
+    }
+
+    const dto = plainToInstance(GetPublishedContentsDto, req.query, { excludeExtraneousValues: true })
+
+    try {
+        const { contents, total } = await contentService.getPublishedContents(dto)
+
+        const data = contents.map(content => instanceToPlain(new ContentResource(content)))
+
+        return res.status(StatusCodes.OK).json(instanceToPlain(new PaginationResource({
+            data,
+            total,
+            take: dto.take,
+            cursor: dto.cursor,
+        })))
+    } catch (error) {
+        console.log(error)
+
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: 'Get published contents failed'
         })
     }
 }

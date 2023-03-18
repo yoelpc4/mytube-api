@@ -6,35 +6,35 @@ import { getFileUrl } from '../../helpers';
 export class ContentResource {
     id: number
 
-    title: string
+    title?: string
 
-    description: string | null
+    description?: string | null
 
-    videoBasename: string
+    videoBasename?: string
 
     @Expose()
     @Transform(({ obj }) => getFileUrl(join('videos', obj.videoBasename)), { toPlainOnly: true })
-    videoUrl: string;
+    videoUrl?: string;
 
-    tags: string | null
+    tags?: string | null
 
-    status: string
+    status?: string
 
-    thumbnailBasename: string | null
+    thumbnailBasename?: string | null
 
     @Expose()
     @Transform(({ obj }) => obj.thumbnailBasename ? getFileUrl(join('thumbnails', obj.thumbnailBasename)) : null, { toPlainOnly: true })
-    thumbnailUrl: string | null;
+    thumbnailUrl?: string | null;
 
-    createdAt: Date
+    createdAt?: Date
 
-    updatedAt: Date
+    updatedAt?: Date
 
     @Expose()
     @Transform(({ value }) => value ? new UserResource(value) : null, { toPlainOnly: true })
     createdBy?: UserResource
 
-    createdById: number
+    createdById?: number
 
     constructor(data: Partial<ContentResource>) {
         Object.assign(this, data)
