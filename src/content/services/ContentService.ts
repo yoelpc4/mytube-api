@@ -7,6 +7,12 @@ import { CreateContentDto, GetContentsDto, GetPublishedContentsDto, UpdateConten
 import { prisma } from '../../common/services';
 import { NotFoundException } from '../../common/exceptions';
 
+interface FindContentOptions {
+    mustIncrementViews: boolean
+    includeViewCounts: boolean
+    user: User
+}
+
 export class ContentService {
     async getContents(dto: GetContentsDto, user: User) {
         const findManyArgs: Prisma.ContentFindManyArgs = {
@@ -41,6 +47,11 @@ export class ContentService {
                     select: {
                         id: true,
                         name: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        contentViews: true,
                     },
                 },
             },
@@ -95,8 +106,8 @@ export class ContentService {
         })
     }
 
-    async findContent(id: number) {
-        const content = await prisma.content.findUnique({
+    async findContent(id: number, findContentOptions?: Partial<FindContentOptions>) {
+        const findUniqueArgs: Prisma.ContentFindUniqueArgs = {
             include: {
                 createdBy: {
                     select: {
@@ -108,10 +119,32 @@ export class ContentService {
             where: {
                 id,
             },
-        })
+        }
+
+        if (findContentOptions?.includeViewCounts) {
+            findUniqueArgs.include = {
+                ...findUniqueArgs.include,
+                _count: {
+                    select: {
+                        contentViews: true,
+                    },
+                },
+            }
+        }
+
+        const content = await prisma.content.findUnique(findUniqueArgs)
 
         if (!content) {
           throw new NotFoundException(`Content with id ${id} is not found`)
+        }
+
+        if (findContentOptions?.mustIncrementViews) {
+            await prisma.contentView.create({
+                data: {
+                    contentId: content.id,
+                    userId: findContentOptions?.user?.id,
+                },
+            })
         }
 
         return content

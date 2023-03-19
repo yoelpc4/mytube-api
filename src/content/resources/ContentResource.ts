@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { Expose, Transform } from 'class-transformer';
 import { join } from 'path';
 import { UserResource } from '../../auth/resources';
@@ -35,6 +36,8 @@ export class ContentResource {
     createdBy?: UserResource
 
     createdById?: number
+
+    _count?: Prisma.ContentCountAggregateOutputType
 
     constructor(data: Partial<ContentResource>) {
         Object.assign(this, data)
