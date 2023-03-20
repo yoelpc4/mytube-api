@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Content, Prisma } from '@prisma/client';
 import { Expose, Transform } from 'class-transformer';
 import { join } from 'path';
 import { UserResource } from '../../auth/resources';
@@ -37,7 +37,11 @@ export class ContentResource {
 
     createdById?: number
 
-    _count?: Prisma.ContentCountAggregateOutputType
+    _count?: Prisma.ContentCountOutputType
+
+    @Expose()
+    @Transform(({ value }) => Array.isArray(value) ? value.map((relatedContent: Content) => new ContentResource(relatedContent)) : [], { toPlainOnly: true })
+    relatedContents?: ContentResource[]
 
     constructor(data: Partial<ContentResource>) {
         Object.assign(this, data)

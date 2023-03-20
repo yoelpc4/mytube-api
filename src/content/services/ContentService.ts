@@ -1,4 +1,4 @@
-import { Prisma, User, ContentStatus } from '@prisma/client';
+import { Prisma, User, ContentStatus, Content } from '@prisma/client';
 import { rm, stat } from 'fs/promises';
 import { cwd } from 'process'
 import { extname, join } from 'path';
@@ -6,12 +6,6 @@ import pick from 'lodash/pick'
 import { CreateContentDto, GetContentsDto, GetPublishedContentsDto, UpdateContentDto } from '../dto';
 import { prisma } from '../../common/services';
 import { NotFoundException } from '../../common/exceptions';
-
-interface FindContentOptions {
-    mustIncrementViews: boolean
-    includeViewCounts: boolean
-    user: User
-}
 
 export class ContentService {
     async getContents(dto: GetContentsDto, user: User) {
@@ -56,7 +50,7 @@ export class ContentService {
                 },
             },
             where: {
-              status: ContentStatus.PUBLISHED,
+                status: ContentStatus.PUBLISHED,
             },
             take: +(dto.take ?? 10),
         }
@@ -106,8 +100,8 @@ export class ContentService {
         })
     }
 
-    async findContent(id: number, findContentOptions?: Partial<FindContentOptions>) {
-        const findUniqueArgs: Prisma.ContentFindUniqueArgs = {
+    async findContent(id: number, user?: User) {
+        const content = await prisma.content.findUnique({
             include: {
                 createdBy: {
                     select: {
@@ -115,43 +109,85 @@ export class ContentService {
                         name: true,
                     },
                 },
-            },
-            where: {
-                id,
-            },
-        }
-
-        if (findContentOptions?.includeViewCounts) {
-            findUniqueArgs.include = {
-                ...findUniqueArgs.include,
                 _count: {
                     select: {
                         contentViews: true,
                     },
                 },
-            }
-        }
-
-        const content = await prisma.content.findUnique(findUniqueArgs)
+            },
+            where: {
+                id,
+            },
+        })
 
         if (!content) {
-          throw new NotFoundException(`Content with id ${id} is not found`)
+            throw new NotFoundException(`Content with id ${id} is not found`)
         }
 
-        if (findContentOptions?.mustIncrementViews) {
-            await prisma.contentView.create({
-                data: {
-                    contentId: content.id,
-                    userId: findContentOptions?.user?.id,
+        await prisma.contentView.create({
+            data: {
+                contentId: content.id,
+                userId: user?.id,
+            },
+        })
+
+        const relatedContents = await prisma.content.findMany({
+            include: {
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
                 },
-            })
-        }
+                _count: {
+                    select: {
+                        contentViews: true,
+                    },
+                },
+            },
+            where: {
+                id: {
+                    not: id,
+                },
+                status: ContentStatus.PUBLISHED,
+                OR: [
+                    {
+                        title: {
+                            search: `'${content.title}'`,
+                        },
+                    },
+                    {
+                        description: {
+                            search: `'${content.title}'`,
+                        },
+                    },
+                    {
+                        tags: {
+                            search: `'${content.title}'`,
+                        },
+                    },
+                ],
+            },
+            take: 10,
+        })
 
-        return content
+        return {content, relatedContents}
     }
 
     async updateContent(id: number, dto: UpdateContentDto) {
-        const content = await this.findContent(id)
+        const content = await prisma.content.findUnique({
+            select: {
+                id: true,
+                thumbnailBasename: true,
+            },
+            where: {
+                id,
+            },
+        })
+
+        if (!content) {
+            throw new NotFoundException(`Content with id ${id} is not found`)
+        }
 
         const data: Prisma.ContentUncheckedUpdateInput = {
             title: dto.title,
@@ -197,7 +233,20 @@ export class ContentService {
     }
 
     async deleteContent(id: number) {
-        const content = await this.findContent(id)
+        const content = await prisma.content.findUnique({
+            select: {
+                id: true,
+                videoBasename: true,
+                thumbnailBasename: true,
+            },
+            where: {
+                id,
+            },
+        })
+
+        if (!content) {
+            throw new NotFoundException(`Content with id ${id} is not found`)
+        }
 
         await prisma.$transaction(async tx => {
             await tx.content.delete({

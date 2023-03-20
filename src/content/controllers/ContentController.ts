@@ -101,13 +101,12 @@ export const createContent = async (req: Request, res: Response) => {
 
 export const findContent = async (req: Request, res: Response) => {
     try {
-        const content = await contentService.findContent(+req.params.id, {
-            mustIncrementViews: true,
-            includeViewCounts: true,
-            user: req.user as User,
-        })
+        const { content, relatedContents } = await contentService.findContent(+req.params.id, req.user as User)
 
-        const contentResource = instanceToPlain(new ContentResource(content))
+        const contentResource = instanceToPlain(new ContentResource({
+            ...content,
+            relatedContents,
+        }))
 
         return res.status(StatusCodes.OK).json(contentResource)
     } catch (error) {
