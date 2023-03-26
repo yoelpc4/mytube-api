@@ -1,4 +1,4 @@
-import { Prisma, User, ContentStatus, Content } from '@prisma/client';
+import { Prisma, User, ContentStatus } from '@prisma/client';
 import { rm, stat } from 'fs/promises';
 import { cwd } from 'process'
 import { extname, join } from 'path';
@@ -6,6 +6,7 @@ import pick from 'lodash/pick'
 import { CreateContentDto, GetContentsDto, GetPublishedContentsDto, UpdateContentDto } from '../dto';
 import { prisma } from '../../common/services';
 import { NotFoundException } from '../../common/exceptions';
+import { likeContent } from '../controllers';
 
 export class ContentService {
     async getContents(dto: GetContentsDto, user: User) {
@@ -24,9 +25,10 @@ export class ContentService {
             }
         }
 
-        const contents = await prisma.content.findMany(findManyArgs)
-
-        const total = await prisma.content.count(pick(findManyArgs, ['where']))
+        const [contents, total] = await Promise.all([
+            prisma.content.findMany(findManyArgs),
+            prisma.content.count(pick(findManyArgs, ['where'])),
+        ])
 
         return {
             contents,
@@ -70,9 +72,10 @@ export class ContentService {
             }
         }
 
-        const contents = await prisma.content.findMany(findManyArgs)
-
-        const total = await prisma.content.count(pick(findManyArgs, ['where']))
+        const [contents, total] = await Promise.all([
+            prisma.content.findMany(findManyArgs),
+            prisma.content.count(pick(findManyArgs, ['where'])),
+        ])
 
         return {
             contents,
@@ -126,52 +129,95 @@ export class ContentService {
 
         await prisma.contentView.create({
             data: {
-                contentId: content.id,
+                contentId: id,
                 userId: user?.id,
             },
         })
 
-        const relatedContents = await prisma.content.findMany({
-            include: {
-                createdBy: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-                _count: {
-                    select: {
-                        contentViews: true,
-                    },
-                },
-            },
-            where: {
-                id: {
-                    not: id,
-                },
-                status: ContentStatus.PUBLISHED,
-                OR: [
-                    {
-                        title: {
-                            search: `'${content.title}'`,
-                        },
-                    },
-                    {
-                        description: {
-                            search: `'${content.title}'`,
-                        },
-                    },
-                    {
-                        tags: {
-                            search: `'${content.title}'`,
-                        },
-                    },
-                ],
-            },
-            take: 10,
-        })
+        ++content._count.contentViews
 
-        return {content, relatedContents}
+        const [countLikes, countDislikes, relatedContents, contentLike, contentDislike] = await Promise.all([
+            prisma.contentLike.count({
+                where: {
+                    contentId: id,
+                    isLike: true,
+                },
+            }),
+            prisma.contentLike.count({
+                where: {
+                    contentId: id,
+                    isLike: false,
+                },
+            }),
+            prisma.content.findMany({
+                include: {
+                    createdBy: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
+                    _count: {
+                        select: {
+                            contentViews: true,
+                        },
+                    },
+                },
+                where: {
+                    id: {
+                        not: id,
+                    },
+                    status: ContentStatus.PUBLISHED,
+                    OR: [
+                        {
+                            title: {
+                                search: `'${content.title}'`,
+                            },
+                        },
+                        {
+                            description: {
+                                search: `'${content.title}'`,
+                            },
+                        },
+                        {
+                            tags: {
+                                search: `'${content.title}'`,
+                            },
+                        },
+                    ],
+                },
+                take: 10,
+            }),
+            prisma.contentLike.findFirst({
+                select: {
+                  id: true,
+                },
+                where: {
+                    contentId: id,
+                    userId: user?.id,
+                    isLike: true,
+                },
+            }),
+            prisma.contentLike.findFirst({
+                select: {
+                    id: true,
+                },
+                where: {
+                    contentId: id,
+                    userId: user?.id,
+                    isLike: false,
+                },
+            }),
+        ])
+
+        return {
+            content,
+            countLikes,
+            countDislikes,
+            relatedContents,
+            isLiked: !!contentLike,
+            isDisliked: !!contentDislike,
+        }
     }
 
     async updateContent(id: number, dto: UpdateContentDto) {
@@ -275,11 +321,103 @@ export class ContentService {
         })
     }
 
-    getVideoPath(basename: string) {
+    async likeContent(id: number, user: User) {
+        const content = await prisma.content.findUnique({
+            select: {
+                id: true,
+            },
+            where: {
+                id,
+            },
+        })
+
+        if (!content) {
+            throw new NotFoundException(`Content with id ${id} is not found`)
+        }
+
+        const contentLike = await prisma.contentLike.findFirst({
+            select: {
+                id: true,
+                isLike: true,
+            },
+            where: {
+                contentId: id,
+                userId: user.id,
+            },
+        })
+
+        await prisma.$transaction(async tx => {
+            if (contentLike) {
+                await tx.contentLike.delete({
+                    where: {
+                        id: contentLike.id,
+                    },
+                })
+            }
+
+            if (!contentLike || !contentLike.isLike) {
+                await tx.contentLike.create({
+                    data: {
+                        contentId: id,
+                        userId: user.id,
+                        isLike: true,
+                    },
+                })
+            }
+        })
+    }
+
+    async dislikeContent(id: number, user: User) {
+        const content = await prisma.content.findUnique({
+            select: {
+                id: true,
+            },
+            where: {
+                id,
+            },
+        })
+
+        if (!content) {
+            throw new NotFoundException(`Content with id ${id} is not found`)
+        }
+
+        const contentLike = await prisma.contentLike.findFirst({
+            select: {
+                id: true,
+                isLike: true,
+            },
+            where: {
+                contentId: id,
+                userId: user.id,
+            },
+        })
+
+        await prisma.$transaction(async tx => {
+            if (contentLike) {
+                await tx.contentLike.delete({
+                    where: {
+                        id: contentLike.id,
+                    },
+                })
+            }
+
+            if (!contentLike || contentLike.isLike) {
+                await tx.contentLike.create({
+                    data: {
+                        contentId: id,
+                        userId: user.id,
+                        isLike: false,
+                    },
+                })
+            }
+        })
+    }
+
+    private getVideoPath(basename: string) {
         return join(cwd(), 'public', 'videos', basename)
     }
 
-    getThumbnailPath(basename: string) {
+    private getThumbnailPath(basename: string) {
         return join(cwd(), 'public', 'thumbnails', basename)
     }
 }

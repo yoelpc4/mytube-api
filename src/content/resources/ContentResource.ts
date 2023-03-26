@@ -1,5 +1,5 @@
 import { Content, Prisma } from '@prisma/client';
-import { Expose, Transform } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import { join } from 'path';
 import { UserResource } from '../../auth/resources';
 import { getFileUrl } from '../../helpers';
@@ -37,11 +37,24 @@ export class ContentResource {
 
     createdById?: number
 
-    _count?: Prisma.ContentCountOutputType
+    @Expose()
+    @Transform(({ obj }) => obj._count?.contentViews, { toPlainOnly: true })
+    countViews?: number
+
+    countLikes?: number
+
+    countDislikes?: number
+
+    isLiked?: boolean
+
+    isDisliked?: boolean
 
     @Expose()
     @Transform(({ value }) => Array.isArray(value) ? value.map((relatedContent: Content) => new ContentResource(relatedContent)) : [], { toPlainOnly: true })
     relatedContents?: ContentResource[]
+
+    @Exclude()
+    _count?: Partial<Prisma.ContentCountOutputType>
 
     constructor(data: Partial<ContentResource>) {
         Object.assign(this, data)

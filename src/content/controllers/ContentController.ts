@@ -14,17 +14,17 @@ const contentService = new ContentService()
 export const getContents = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
-    if (! errors.isEmpty()) {
+    if (!errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
             message: 'Please fix the following errors',
             errors: errors.array(),
         })
     }
 
-    const dto = plainToInstance(GetContentsDto, req.query, { excludeExtraneousValues: true })
+    const dto = plainToInstance(GetContentsDto, req.query, {excludeExtraneousValues: true})
 
     try {
-        const { contents, total } = await contentService.getContents(dto, req.user as User)
+        const {contents, total} = await contentService.getContents(dto, req.user as User)
 
         const data = contents.map(content => instanceToPlain(new ContentResource(content)))
 
@@ -46,17 +46,17 @@ export const getContents = async (req: Request, res: Response) => {
 export const getPublishedContents = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
-    if (! errors.isEmpty()) {
+    if (!errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
             message: 'Please fix the following errors',
             errors: errors.array(),
         })
     }
 
-    const dto = plainToInstance(GetPublishedContentsDto, req.query, { excludeExtraneousValues: true })
+    const dto = plainToInstance(GetPublishedContentsDto, req.query, {excludeExtraneousValues: true})
 
     try {
-        const { contents, total } = await contentService.getPublishedContents(dto)
+        const {contents, total} = await contentService.getPublishedContents(dto)
 
         const data = contents.map(content => instanceToPlain(new ContentResource(content)))
 
@@ -82,7 +82,7 @@ export const createContent = async (req: Request, res: Response) => {
         })
     }
 
-    const dto = plainToInstance(CreateContentDto, { video: req.files.video }, { excludeExtraneousValues: true })
+    const dto = plainToInstance(CreateContentDto, {video: req.files.video}, {excludeExtraneousValues: true})
 
     try {
         const content = await contentService.createContent(dto, req.user as User)
@@ -101,11 +101,15 @@ export const createContent = async (req: Request, res: Response) => {
 
 export const findContent = async (req: Request, res: Response) => {
     try {
-        const { content, relatedContents } = await contentService.findContent(+req.params.id, req.user as User)
+        const {content, countLikes, countDislikes, relatedContents, isLiked, isDisliked} = await contentService.findContent(+req.params.id, req.user as User)
 
         const contentResource = instanceToPlain(new ContentResource({
             ...content,
+            countLikes,
+            countDislikes,
             relatedContents,
+            isLiked,
+            isDisliked,
         }))
 
         return res.status(StatusCodes.OK).json(contentResource)
@@ -127,23 +131,21 @@ export const findContent = async (req: Request, res: Response) => {
 export const updateContent = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
-    if (! errors.isEmpty()) {
+    if (!errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
             message: 'Please fix the following errors',
             errors: errors.array(),
         })
     }
 
-    const dto = plainToInstance(
-        UpdateContentDto,
-        {
+    const dto = plainToInstance(UpdateContentDto, {
             title: req.body.title,
             description: req.body.description,
             tags: req.body.tags,
             thumbnail: req.files?.thumbnail,
             status: req.body.status,
         },
-        { excludeExtraneousValues: true }
+        {excludeExtraneousValues: true}
     )
 
     try {
@@ -183,6 +185,50 @@ export const deleteContent = async (req: Request, res: Response) => {
 
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             message: 'Delete content failed'
+        })
+    }
+}
+
+export const likeContent = async (req: Request, res: Response) => {
+    try {
+        await contentService.likeContent(+req.params.id, req.user as User)
+
+        return res.status(StatusCodes.OK).json({
+            message: 'Like content succeed',
+        })
+    } catch (error) {
+        console.log(error)
+
+        if (error instanceof NotFoundException) {
+            return res.status(error.code).json({
+                message: error.message
+            })
+        }
+
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: 'Like content failed'
+        })
+    }
+}
+
+export const dislikeContent = async (req: Request, res: Response) => {
+    try {
+        await contentService.dislikeContent(+req.params.id, req.user as User)
+
+        return res.status(StatusCodes.OK).json({
+            message: 'Dislike content succeed',
+        })
+    } catch (error) {
+        console.log(error)
+
+        if (error instanceof NotFoundException) {
+            return res.status(error.code).json({
+                message: error.message
+            })
+        }
+
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: 'Dislike content failed'
         })
     }
 }

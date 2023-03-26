@@ -2,9 +2,11 @@ import { Router } from 'express';
 import {
     createContent,
     deleteContent,
+    dislikeContent,
     findContent,
     getContents,
     getPublishedContents,
+    likeContent,
     updateContent
 } from '../controllers';
 import { anonymous, auth } from '../../auth/middlewares';
@@ -59,6 +61,18 @@ router.delete(
     '/:id',
     auth,
     deleteContent
+)
+
+router.post(
+    '/:id/like',
+    auth,
+    likeContent
+)
+
+router.post(
+    '/:id/dislike',
+    auth,
+    dislikeContent
 )
 
 export default router
