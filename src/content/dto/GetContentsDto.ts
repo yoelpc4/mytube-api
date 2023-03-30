@@ -1,5 +1,5 @@
 import { Content, Prisma } from '@prisma/client';
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 
 interface Sort {
     field: keyof Content
@@ -11,8 +11,10 @@ export class GetContentsDto {
     sort?: Sort
 
     @Expose()
+    @Transform(({ value }) => +(value ?? 0), { toClassOnly: true })
     skip: number
 
     @Expose()
+    @Transform(({ value }) => +(value ?? 10), { toClassOnly: true })
     take: number
 }

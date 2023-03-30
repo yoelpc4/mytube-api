@@ -1,4 +1,5 @@
 export * from './CreateContentDto'
 export * from './GetContentsDto'
-export * from './GetPublishedContentsDto'
+export * from './GetContentHistoriesDto'
+export * from './GetContentFeedsDto'
 export * from './UpdateContentDto'

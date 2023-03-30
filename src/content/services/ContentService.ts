@@ -3,10 +3,21 @@ import { rm, stat } from 'fs/promises';
 import { cwd } from 'process'
 import { extname, join } from 'path';
 import pick from 'lodash/pick'
-import { CreateContentDto, GetContentsDto, GetPublishedContentsDto, UpdateContentDto } from '../dto';
+import {
+    CreateContentDto,
+    GetContentsDto,
+    GetContentHistoriesDto,
+    GetContentFeedsDto,
+    UpdateContentDto
+} from '../dto';
 import { prisma } from '../../common/services';
 import { NotFoundException } from '../../common/exceptions';
-import { likeContent } from '../controllers';
+
+interface ContentHistoriesFindManyArgs extends Prisma.ContentViewFindManyArgs {
+    select: Prisma.ContentViewSelect & {
+        content: Prisma.ContentArgs,
+    },
+}
 
 export class ContentService {
     async getContents(dto: GetContentsDto, user: User) {
@@ -14,8 +25,8 @@ export class ContentService {
             where: {
                 createdById: user.id,
             },
-            skip: +(dto.skip ?? 0),
-            take: +(dto.take ?? 10),
+            skip: dto.skip,
+            take: dto.take,
         }
 
         if (dto.sort) {
@@ -36,7 +47,7 @@ export class ContentService {
         }
     }
 
-    async getPublishedContents(dto: GetPublishedContentsDto) {
+    async getContentFeeds(dto: GetContentFeedsDto) {
         const findManyArgs: Prisma.ContentFindManyArgs = {
             include: {
                 createdBy: {
@@ -54,7 +65,10 @@ export class ContentService {
             where: {
                 status: ContentStatus.PUBLISHED,
             },
-            take: +(dto.take ?? 10),
+            orderBy: {
+              createdAt: 'desc',
+            },
+            take: dto.take,
         }
 
         if (dto.cursor) {
@@ -65,13 +79,6 @@ export class ContentService {
             findManyArgs.skip = 1
         }
 
-        if (dto.sort) {
-            findManyArgs.orderBy = {
-                ...findManyArgs.orderBy,
-                [dto.sort.field]: dto.sort.order
-            }
-        }
-
         const [contents, total] = await Promise.all([
             prisma.content.findMany(findManyArgs),
             prisma.content.count(pick(findManyArgs, ['where'])),
@@ -79,6 +86,59 @@ export class ContentService {
 
         return {
             contents,
+            total,
+        }
+    }
+
+    async getContentHistories(dto: GetContentHistoriesDto, user: User) {
+        const findManyArgs: ContentHistoriesFindManyArgs = {
+            select: {
+                id: true,
+                contentId: true,
+                content: {
+                    include: {
+                        createdBy: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                        _count: {
+                            select: {
+                                contentViews: true,
+                            },
+                        },
+                    },
+                },
+            },
+            distinct: ['contentId'],
+            where: {
+                userId: user.id,
+                content: {
+                    status: ContentStatus.PUBLISHED,
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+            take: dto.take,
+        }
+
+        if (dto.cursor) {
+            findManyArgs.cursor = {
+                id: dto.cursor,
+            }
+
+            findManyArgs.skip = 1
+        }
+
+        const [contentViews, total] = await Promise.all([
+            prisma.contentView.findMany(findManyArgs),
+            prisma.contentView.count(pick(findManyArgs, ['where'])),
+        ])
+
+        return {
+            contents: contentViews.map(contentView => contentView.content),
             total,
         }
     }
@@ -190,7 +250,7 @@ export class ContentService {
             }),
             prisma.contentLike.findFirst({
                 select: {
-                  id: true,
+                    id: true,
                 },
                 where: {
                     contentId: id,

@@ -26,11 +26,11 @@ export class PaginationResource<T> {
             take: params.take,
         }
 
-        if (params.skip) {
+        if (params.skip !== undefined) {
             this.meta.skip = params.skip
         }
 
-        if (params.cursor) {
+        if (params.cursor !== undefined) {
             this.meta.cursor = params.cursor
         }
     }

@@ -5,7 +5,8 @@ import {
     dislikeContent,
     findContent,
     getContents,
-    getPublishedContents,
+    getContentHistories,
+    getContentFeeds,
     likeContent,
     updateContent
 } from '../controllers';
@@ -26,13 +27,19 @@ router.get(
 )
 
 router.get(
-    '/published',
+    '/feeds',
     anonymous,
-    query('sort.field').if(query('sort.order').exists()).notEmpty().bail().isIn(['id', 'title', 'createdAt', 'updatedAt']).bail().trim(),
-    query('sort.order').if(query('sort.field').exists()).notEmpty().bail().isIn(['asc', 'desc']).bail().trim(),
     query('skip').optional().isNumeric().bail().trim(),
     query('take').optional().isNumeric().bail().trim(),
-    getPublishedContents
+    getContentFeeds
+)
+
+router.get(
+    '/histories',
+    auth,
+    query('skip').optional().isNumeric().bail().trim(),
+    query('take').optional().isNumeric().bail().trim(),
+    getContentHistories
 )
 
 router.post(
