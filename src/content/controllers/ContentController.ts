@@ -9,7 +9,7 @@ import {
     GetContentsDto,
     GetContentHistoriesDto,
     GetContentFeedsDto,
-    UpdateContentDto
+    UpdateContentDto,
 } from '../dto';
 import { ContentResource } from '../resources';
 import { NotFoundException } from '../../common/exceptions';

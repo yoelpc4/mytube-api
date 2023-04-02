@@ -11,6 +11,7 @@ export class AuthService {
         const user = await prisma.$transaction(tx => tx.user.create({
             data: {
                 name: dto.name,
+                username: dto.username,
                 email: dto.email,
                 password: hashedPassword,
             },
@@ -22,11 +23,11 @@ export class AuthService {
     async login(dto: LoginDto) {
         const user = await prisma.user.findUnique({
             select: {
-              id: true,
-              password: true,
+                id: true,
+                password: true,
             },
             where: {
-                email: dto.email,
+                username: dto.username,
             },
         })
 

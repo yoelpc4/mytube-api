@@ -12,17 +12,33 @@ datasource db {
 }
 
 model User {
-  id             Int           @id @default(autoincrement())
-  name           String        @db.VarChar(255)
-  email          String        @unique @db.VarChar(255)
-  password       String        @db.VarChar(255)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id             Int            @id @default(autoincrement())
+  name           String         @db.VarChar(255)
+  username       String         @unique @db.VarChar(255)
+  email          String         @unique @db.VarChar(255)
+  password       String         @db.VarChar(255)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  channels       Subscription[] @relation("channel")
+  subscribers    Subscription[] @relation("subscriber")
   contents       Content[]
   viewedContents ContentView[]
   likedContents  ContentLike[]
 
   @@map("users")
+}
+
+model Subscription {
+  id           Int      @id @default(autoincrement())
+  channelId    Int
+  channel      User     @relation("channel", fields: [channelId], references: [id])
+  subscriberId Int
+  subscriber   User     @relation("subscriber", fields: [subscriberId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([channelId, subscriberId])
+  @@map("subscriptions")
 }
 
 model Content {

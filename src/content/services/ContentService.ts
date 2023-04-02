@@ -8,7 +8,7 @@ import {
     GetContentsDto,
     GetContentHistoriesDto,
     GetContentFeedsDto,
-    UpdateContentDto
+    UpdateContentDto,
 } from '../dto';
 import { prisma } from '../../common/services';
 import { NotFoundException } from '../../common/exceptions';
@@ -170,6 +170,11 @@ export class ContentService {
                     select: {
                         id: true,
                         name: true,
+                        _count: {
+                            select: {
+                                subscribers: true,
+                            },
+                        },
                     },
                 },
                 _count: {
@@ -184,7 +189,7 @@ export class ContentService {
         })
 
         if (!content) {
-            throw new NotFoundException(`Content with id ${id} is not found`)
+            throw new NotFoundException('Content does not exists')
         }
 
         await prisma.contentView.create({
@@ -292,7 +297,7 @@ export class ContentService {
         })
 
         if (!content) {
-            throw new NotFoundException(`Content with id ${id} is not found`)
+            throw new NotFoundException('Content does not exists')
         }
 
         const data: Prisma.ContentUncheckedUpdateInput = {
@@ -351,7 +356,7 @@ export class ContentService {
         })
 
         if (!content) {
-            throw new NotFoundException(`Content with id ${id} is not found`)
+            throw new NotFoundException('Content does not exists')
         }
 
         await prisma.$transaction(async tx => {
@@ -392,7 +397,7 @@ export class ContentService {
         })
 
         if (!content) {
-            throw new NotFoundException(`Content with id ${id} is not found`)
+            throw new NotFoundException('Content does not exists')
         }
 
         const contentLike = await prisma.contentLike.findFirst({
@@ -438,7 +443,7 @@ export class ContentService {
         })
 
         if (!content) {
-            throw new NotFoundException(`Content with id ${id} is not found`)
+            throw new NotFoundException('Content does not exists')
         }
 
         const contentLike = await prisma.contentLike.findFirst({
