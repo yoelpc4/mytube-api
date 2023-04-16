@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { auth } from '../../auth/middlewares';
+import { anonymous, auth } from '../../auth/middlewares';
 import { findChannel, getChannelContents, subscribe, unsubscribe } from '../controllers/ChannelController';
 import { query } from 'express-validator';
 
@@ -7,15 +7,15 @@ const router = Router()
 
 router.get(
     '/:username',
-    auth,
+    anonymous,
     findChannel,
 )
 
 router.get(
-    '/:username/contents',
+    '/:createdById/contents',
     query('skip').optional().isNumeric().bail().trim(),
     query('take').optional().isNumeric().bail().trim(),
-    auth,
+    anonymous,
     getChannelContents,
 )
 

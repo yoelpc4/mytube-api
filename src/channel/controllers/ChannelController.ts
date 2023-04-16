@@ -15,7 +15,7 @@ const channelService = new ChannelService()
 
 export const findChannel = async (req: Request, res: Response) => {
     try {
-        const channel = await channelService.findChannel(req.params.username)
+        const channel = await channelService.findChannel(req.params.username, req.user as User)
 
         const channelResource = instanceToPlain(new UserResource(channel))
 
@@ -48,7 +48,7 @@ export const getChannelContents = async (req: Request, res: Response) => {
     const dto = plainToInstance(GetChannelContentsDto, req.query, {excludeExtraneousValues: true})
 
     try {
-        const {contents, total} = await channelService.getChannelContents(req.params.username, dto)
+        const {contents, total} = await channelService.getChannelContents(+req.params.createdById, dto)
 
         const data = contents.map(content => instanceToPlain(new ContentResource(content)))
 

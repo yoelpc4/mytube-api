@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import { Exclude, Expose, Transform } from 'class-transformer';
 
 export class UserResource {
@@ -18,12 +18,20 @@ export class UserResource {
     updatedAt?: Date
 
     @Expose()
+    @Transform(({ value }) => Array.isArray(value) ? value.map((channelSubscription: User) => new UserResource(channelSubscription)) : [], { toPlainOnly: true })
+    channelSubscriptions?: UserResource[]
+
+    @Expose()
+    @Transform(({ value }) => Array.isArray(value) ? value.map((subscriberSubscription: User) => new UserResource(subscriberSubscription)) : [], { toPlainOnly: true })
+    subscriberSubscriptions?: UserResource[]
+
+    @Expose()
     @Transform(({ obj }) => obj._count?.contents, { toPlainOnly: true })
     countContents?: number
 
     @Expose()
-    @Transform(({ obj }) => obj._count?.subscribers, { toPlainOnly: true })
-    countSubscribers?: number
+    @Transform(({ obj }) => obj._count?.channelSubscriptions, { toPlainOnly: true })
+    countChannelSubscriptions?: number
 
     @Exclude()
     _count?: Partial<Prisma.UserCountOutputType>

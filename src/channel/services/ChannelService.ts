@@ -9,13 +9,23 @@ import {
 } from '../exceptions';
 
 export class ChannelService {
-    async findChannel(username: string) {
+    async findChannel(username: string, user?: User) {
         const channel = await prisma.user.findUnique({
             include: {
+                channelSubscriptions: {
+                    select: {
+                        id: true,
+                        channelId: true,
+                        subscriberId: true,
+                    },
+                    where: {
+                        subscriberId: user?.id,
+                    },
+                },
                 _count: {
                     select: {
                         contents: true,
-                        subscribers: true,
+                        channelSubscriptions: true,
                     },
                 }
             },
@@ -31,15 +41,9 @@ export class ChannelService {
         return channel
     }
 
-    async getChannelContents(username: string, dto: GetChannelContentsDto) {
+    async getChannelContents(createdById: number, dto: GetChannelContentsDto) {
         const findManyArgs: Prisma.ContentFindManyArgs = {
             include: {
-                createdBy: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
                 _count: {
                     select: {
                         contentViews: true,
@@ -48,9 +52,7 @@ export class ChannelService {
             },
             where: {
                 status: ContentStatus.PUBLISHED,
-                createdBy: {
-                    username,
-                },
+                createdById,
             },
             orderBy: {
                 createdAt: 'desc',

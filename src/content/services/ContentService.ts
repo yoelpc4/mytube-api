@@ -54,6 +54,7 @@ export class ContentService {
                     select: {
                         id: true,
                         name: true,
+                        username: true,
                     },
                 },
                 _count: {
@@ -66,7 +67,7 @@ export class ContentService {
                 status: ContentStatus.PUBLISHED,
             },
             orderBy: {
-              createdAt: 'desc',
+                createdAt: 'desc',
             },
             take: dto.take,
         }
@@ -101,6 +102,7 @@ export class ContentService {
                             select: {
                                 id: true,
                                 name: true,
+                                username: true,
                             },
                         },
                         _count: {
@@ -170,9 +172,20 @@ export class ContentService {
                     select: {
                         id: true,
                         name: true,
+                        username: true,
+                        channelSubscriptions: {
+                            select: {
+                                id: true,
+                                channelId: true,
+                                subscriberId: true,
+                            },
+                            where: {
+                                subscriberId: user?.id,
+                            },
+                        },
                         _count: {
                             select: {
-                                subscribers: true,
+                                channelSubscriptions: true,
                             },
                         },
                     },
