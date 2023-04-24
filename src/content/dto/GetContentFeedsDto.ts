@@ -2,6 +2,7 @@ import { Expose, Transform } from 'class-transformer';
 
 export class GetContentFeedsDto {
     @Expose()
+    @Transform(({ value }) => +value, { toClassOnly: true })
     cursor?: number
 
     @Expose()

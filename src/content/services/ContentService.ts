@@ -1,13 +1,13 @@
-import { Prisma, User, ContentStatus } from '@prisma/client';
+import { ContentStatus, Prisma, User } from '@prisma/client';
 import { rm, stat } from 'fs/promises';
 import { cwd } from 'process'
 import { extname, join } from 'path';
 import pick from 'lodash/pick'
 import {
     CreateContentDto,
-    GetContentsDto,
-    GetContentHistoriesDto,
     GetContentFeedsDto,
+    GetContentHistoriesDto,
+    GetContentsDto,
     UpdateContentDto,
 } from '../dto';
 import { prisma } from '../../common/services';
@@ -113,7 +113,6 @@ export class ContentService {
                     },
                 },
             },
-            distinct: ['contentId'],
             where: {
                 userId: user.id,
                 content: {
@@ -140,7 +139,7 @@ export class ContentService {
         ])
 
         return {
-            contents: contentViews.map(contentView => contentView.content),
+            contentViews,
             total,
         }
     }

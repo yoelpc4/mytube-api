@@ -11,7 +11,7 @@ import {
     GetContentFeedsDto,
     UpdateContentDto,
 } from '../dto';
-import { ContentResource } from '../resources';
+import { ContentResource, ContentViewResource } from '../resources';
 import { NotFoundException } from '../../common/exceptions';
 import { PaginationResource } from '../../common/resources';
 
@@ -94,9 +94,9 @@ export const getContentHistories = async (req: Request, res: Response) => {
     const dto = plainToInstance(GetContentHistoriesDto, req.query, {excludeExtraneousValues: true})
 
     try {
-        const {contents, total} = await contentService.getContentHistories(dto, req.user as User)
+        const {contentViews, total} = await contentService.getContentHistories(dto, req.user as User)
 
-        const data = contents.map(content => instanceToPlain(new ContentResource(content)))
+        const data = contentViews.map(contentView => instanceToPlain(new ContentViewResource(contentView)))
 
         return res.status(StatusCodes.OK).json(instanceToPlain(new PaginationResource({
             data,

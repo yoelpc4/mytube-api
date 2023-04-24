@@ -29,7 +29,7 @@ router.get(
 router.get(
     '/feeds',
     anonymous,
-    query('skip').optional().isNumeric().bail().trim(),
+    query('cursor').optional().isNumeric().bail().trim(),
     query('take').optional().isNumeric().bail().trim(),
     getContentFeeds
 )
@@ -37,7 +37,7 @@ router.get(
 router.get(
     '/histories',
     auth,
-    query('skip').optional().isNumeric().bail().trim(),
+    query('cursor').optional().isNumeric().bail().trim(),
     query('take').optional().isNumeric().bail().trim(),
     getContentHistories
 )
