@@ -1,8 +1,15 @@
 import { Router } from 'express';
 import { body } from 'express-validator'
 import { auth } from '../middlewares';
-import { getUser, login, register } from '../controllers';
-import { IsEmailUniqueValidator, IsPasswordConfirmationMatchValidator, IsUsernameUniqueValidator } from '../validators';
+import { getUser, login, register, updatePassword, updateProfile } from '../controllers';
+import {
+    IsCurrentPasswordMatchValidator,
+    IsEmailUniqueIgnoreAuthUserValidator,
+    IsEmailUniqueValidator,
+    IsPasswordConfirmationMatchValidator,
+    IsUsernameUniqueIgnoreAuthUserValidator,
+    IsUsernameUniqueValidator
+} from '../validators';
 
 const router = Router()
 
@@ -25,6 +32,22 @@ router.get(
     '/user',
     auth,
     getUser
+)
+router.post(
+    '/update-profile',
+    auth,
+    body('name').notEmpty().bail().isString().bail().trim(),
+    body('username').notEmpty().bail().custom(IsUsernameUniqueIgnoreAuthUserValidator).bail().trim(),
+    body('email').notEmpty().bail().isEmail().bail().custom(IsEmailUniqueIgnoreAuthUserValidator).bail().trim().normalizeEmail(),
+    updateProfile
+)
+router.post(
+    '/update-password',
+    auth,
+    body('currentPassword').notEmpty().bail().isString().bail().custom(IsCurrentPasswordMatchValidator).trim(),
+    body('password').notEmpty().bail().isLength({ min: 8 }).bail().trim(),
+    body('passwordConfirmation').notEmpty().bail().custom(IsPasswordConfirmationMatchValidator),
+    updatePassword
 )
 
 export default router

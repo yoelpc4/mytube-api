@@ -1,3 +1,6 @@
+export * from './IsCurrentPasswordMatchValidator'
 export * from './IsEmailUniqueValidator'
+export * from './IsEmailUniqueIgnoreAuthUserValidator'
 export * from './IsUsernameUniqueValidator'
+export * from './IsUsernameUniqueIgnoreAuthUserValidator'
 export * from './IsPasswordConfirmationMatchValidator'

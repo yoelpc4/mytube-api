@@ -6,7 +6,7 @@ services:
     restart: on-failure
     depends_on:
       - postgres
-    image: node:18-alpine
+    image: node:lts-alpine
     ports:
       - "3000:3000"
       - "5555:5555" # prisma studio

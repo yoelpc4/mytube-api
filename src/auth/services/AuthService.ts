@@ -1,8 +1,9 @@
 import { hash, verify } from 'argon2';
 import { JwtPayload, sign } from 'jsonwebtoken';
 import { prisma } from '../../common/services';
-import { LoginDto, RegisterDto } from '../dto';
+import { LoginDto, RegisterDto, UpdatePasswordDto, UpdateProfileDto } from '../dto';
 import { UnauthorizedException } from '../../common/exceptions';
+import { User } from '@prisma/client';
 
 export class AuthService {
     async register(dto: RegisterDto) {
@@ -42,6 +43,32 @@ export class AuthService {
         }
 
         return this.signAccessToken(user.id)
+    }
+
+    async updateProfile(dto: UpdateProfileDto, user: User) {
+        return await prisma.user.update({
+            data: {
+              name: dto.name,
+              username: dto.username,
+              email: dto.email,
+            },
+            where: {
+                id: user.id,
+            },
+        })
+    }
+
+    async updatePassword(dto: UpdatePasswordDto, user: User) {
+        const hashedPassword = await hash(dto.password)
+
+        await prisma.user.update({
+            data: {
+              password: hashedPassword,
+            },
+            where: {
+                id: user.id,
+            },
+        })
     }
 
     private signAccessToken(id: number) {
