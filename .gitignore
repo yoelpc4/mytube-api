@@ -17,8 +17,7 @@ dist/
 *.sw?
 
 # Environment
-.env.local
-.env.*.local
+.env
 
 # Log Files
 npm-debug.log*

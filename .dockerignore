@@ -16,10 +16,6 @@ dist/
 *.sln
 *.sw?
 
-# Environment
-.env.local
-.env.*.local
-
 # Log Files
 npm-debug.log*
 yarn-debug.log*
