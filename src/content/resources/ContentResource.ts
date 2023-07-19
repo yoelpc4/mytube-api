@@ -1,8 +1,8 @@
 import { Content, Prisma } from '@prisma/client';
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { join } from 'path';
-import { UserResource } from '../../auth/resources';
-import { getFileUrl } from '../../helpers';
+import { UserResource } from '@/auth/resources';
+import { getFileUrl } from '@/helpers';
 
 export class ContentResource {
     id: number

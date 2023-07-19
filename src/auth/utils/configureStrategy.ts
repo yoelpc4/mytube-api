@@ -2,7 +2,7 @@ import { PassportStatic } from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy, StrategyOptions } from 'passport-jwt';
 import { Strategy as AnonymousStrategy } from 'passport-anonymous';
 import { JwtPayload } from 'jsonwebtoken';
-import { prisma } from '../../common/services';
+import { prisma } from '@/common/services';
 
 export const configureStrategy = (passport: PassportStatic) => {
     const jwtOptions: StrategyOptions = {

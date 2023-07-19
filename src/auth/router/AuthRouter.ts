@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator'
-import { auth } from '../middlewares';
-import { getUser, login, register, updatePassword, updateProfile } from '../controllers';
+import { auth } from '@/auth/middlewares';
+import { getUser, login, register, updatePassword, updateProfile } from '@/auth/controllers';
 import {
     IsCurrentPasswordMatchValidator,
     IsEmailUniqueIgnoreAuthUserValidator,
@@ -9,7 +9,7 @@ import {
     IsPasswordConfirmationMatchValidator,
     IsUsernameUniqueIgnoreAuthUserValidator,
     IsUsernameUniqueValidator
-} from '../validators';
+} from '@/auth/validators';
 
 const router = Router()
 

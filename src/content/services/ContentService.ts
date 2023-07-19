@@ -10,8 +10,8 @@ import {
     GetContentsDto,
     UpdateContentDto,
 } from '../dto';
-import { prisma } from '../../common/services';
-import { NotFoundException } from '../../common/exceptions';
+import { prisma } from '@/common/services';
+import { NotFoundException } from '@/common/exceptions';
 
 interface ContentHistoriesFindManyArgs extends Prisma.ContentViewFindManyArgs {
     select: Prisma.ContentViewSelect & {

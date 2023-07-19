@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { anonymous, auth } from '../../auth/middlewares';
-import { findChannel, getChannelContents, subscribe, unsubscribe } from '../controllers/ChannelController';
 import { query } from 'express-validator';
+import { anonymous, auth } from '@/auth/middlewares';
+import { findChannel, getChannelContents, subscribe, unsubscribe } from '@/channel/controllers';
 
 const router = Router()
 

@@ -1,6 +1,6 @@
 import { Expose, Transform } from 'class-transformer';
-import { UserResource } from '../../auth/resources';
-import { ContentResource } from './ContentResource';
+import { UserResource } from '@/auth/resources';
+import { ContentResource } from '@/content/resources';
 
 export class ContentViewResource {
     id: number

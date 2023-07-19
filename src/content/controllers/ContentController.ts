@@ -3,7 +3,7 @@ import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { validationResult } from 'express-validator';
-import { ContentService } from '../services';
+import { ContentService } from '@/content/services';
 import {
     CreateContentDto,
     GetContentsDto,
@@ -11,9 +11,9 @@ import {
     GetContentFeedsDto,
     UpdateContentDto,
 } from '../dto';
-import { ContentResource, ContentViewResource } from '../resources';
-import { NotFoundException } from '../../common/exceptions';
-import { PaginationResource } from '../../common/resources';
+import { ContentResource, ContentViewResource } from '@/content/resources';
+import { NotFoundException } from '@/common/exceptions';
+import { PaginationResource } from '@/common/resources';
 
 const contentService = new ContentService()
 

@@ -5,8 +5,8 @@ import fileUpload from 'express-fileupload';
 import passport from 'passport';
 import { join } from 'path';
 import { cwd } from 'process';
-import router from './router';
-import { configureStrategy } from './auth/utils';
+import router from '@/router';
+import { configureStrategy } from '@/auth/utils';
 import 'reflect-metadata'
 
 dotenv.config()

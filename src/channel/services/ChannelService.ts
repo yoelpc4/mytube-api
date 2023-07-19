@@ -1,8 +1,8 @@
 import { ContentStatus, Prisma, User } from '@prisma/client';
 import pick from 'lodash/pick';
-import { GetChannelContentsDto } from '../dto';
-import { prisma } from '../../common/services';
-import { NotFoundException } from '../../common/exceptions';
+import { GetChannelContentsDto } from '@/channel/dto';
+import { prisma } from '@/common/services';
+import { NotFoundException } from '@/common/exceptions';
 import {
     SubscribeToOwnedChannelException,
     UnsubscribeToOwnedChannelException,

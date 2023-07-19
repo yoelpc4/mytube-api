@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { body, query } from 'express-validator';
 import {
     createContent,
     deleteContent,
@@ -9,10 +10,9 @@ import {
     getContentFeeds,
     likeContent,
     updateContent
-} from '../controllers';
-import { anonymous, auth } from '../../auth/middlewares';
-import { body, query } from 'express-validator';
-import { IsValidStatusValidator } from '../validators/IsValidStatusValidator';
+} from '@/content/controllers';
+import { anonymous, auth } from '@/auth/middlewares';
+import { IsValidStatusValidator } from '@/content/validators';
 
 const router = Router()
 

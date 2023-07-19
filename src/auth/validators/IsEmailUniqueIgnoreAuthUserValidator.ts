@@ -1,5 +1,5 @@
 import { CustomValidator } from 'express-validator';
-import { prisma } from '../../common/services';
+import { prisma } from '@/common/services';
 
 export const IsEmailUniqueIgnoreAuthUserValidator: CustomValidator = async (input, { req }) => {
     const user = await prisma.user.findFirst({

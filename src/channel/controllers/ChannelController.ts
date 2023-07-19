@@ -3,13 +3,13 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { validationResult } from 'express-validator';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
-import { GetChannelContentsDto } from '../dto';
-import { ChannelService } from '../services/ChannelService';
-import { SubscribeToOwnedChannelException, UnsubscribeToOwnedChannelException } from '../exceptions';
-import { NotFoundException } from '../../common/exceptions';
-import { PaginationResource } from '../../common/resources';
-import { ContentResource } from '../../content/resources';
-import { UserResource } from '../../auth/resources';
+import { GetChannelContentsDto } from '@/channel/dto';
+import { ChannelService } from '@/channel/services';
+import { SubscribeToOwnedChannelException, UnsubscribeToOwnedChannelException } from '@/channel/exceptions';
+import { NotFoundException } from '@/common/exceptions';
+import { PaginationResource } from '@/common/resources';
+import { ContentResource } from '@/content/resources';
+import { UserResource } from '@/auth/resources';
 
 const channelService = new ChannelService()
 

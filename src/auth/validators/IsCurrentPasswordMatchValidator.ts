@@ -1,6 +1,5 @@
 import { CustomValidator } from 'express-validator';
-import { prisma } from '../../common/services';
-import { UnauthorizedException } from '../../common/exceptions';
+import { prisma } from '@/common/services';
 import { verify } from 'argon2';
 
 export const IsCurrentPasswordMatchValidator: CustomValidator = async (input, {req}) => {

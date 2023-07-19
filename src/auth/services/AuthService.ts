@@ -1,9 +1,9 @@
 import { hash, verify } from 'argon2';
 import { JwtPayload, sign } from 'jsonwebtoken';
-import { prisma } from '../../common/services';
-import { LoginDto, RegisterDto, UpdatePasswordDto, UpdateProfileDto } from '../dto';
-import { UnauthorizedException } from '../../common/exceptions';
 import { User } from '@prisma/client';
+import { prisma } from '@/common/services';
+import { UnauthorizedException } from '@/common/exceptions';
+import { LoginDto, RegisterDto, UpdatePasswordDto, UpdateProfileDto } from '@/auth/dto';
 
 export class AuthService {
     async register(dto: RegisterDto) {

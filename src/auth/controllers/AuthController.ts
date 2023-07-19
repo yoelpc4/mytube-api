@@ -4,7 +4,7 @@ import { validationResult } from 'express-validator'
 import { StatusCodes } from 'http-status-codes'
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { AuthService } from '../services';
-import { UnauthorizedException } from '../../common/exceptions';
+import { UnauthorizedException } from '@/common/exceptions';
 import { UserResource } from '../resources';
 import { LoginDto, RegisterDto, UpdatePasswordDto, UpdateProfileDto } from '../dto';
 
