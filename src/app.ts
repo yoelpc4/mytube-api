@@ -11,7 +11,7 @@ import 'reflect-metadata'
 
 dotenv.config()
 
-const port = process.env.APP_PORT || 3000
+const port = process.env.APP_PORT ?? 3000
 
 const app = express()
 

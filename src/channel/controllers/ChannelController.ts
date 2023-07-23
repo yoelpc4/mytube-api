@@ -10,6 +10,7 @@ import { NotFoundException } from '@/common/exceptions';
 import { PaginationResource } from '@/common/resources';
 import { ContentResource } from '@/content/resources';
 import { UserResource } from '@/auth/resources';
+import { VALIDATION_ERROR_MESSAGE } from '@/constants';
 
 const channelService = new ChannelService()
 
@@ -40,7 +41,7 @@ export const getChannelContents = async (req: Request, res: Response) => {
 
     if (!errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Please fix the following errors',
+            message: VALIDATION_ERROR_MESSAGE,
             errors: errors.array(),
         })
     }

@@ -13,8 +13,16 @@ router.get(
 
 router.get(
     '/:createdById/contents',
-    query('cursor').optional().isNumeric().bail().trim(),
-    query('take').optional().isNumeric().bail().trim(),
+    query('cursor')
+        .optional()
+        .isNumeric()
+        .bail()
+        .trim(),
+    query('take')
+        .optional()
+        .isNumeric()
+        .bail()
+        .trim(),
     anonymous,
     getChannelContents,
 )

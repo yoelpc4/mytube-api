@@ -28,6 +28,16 @@ model User {
   @@map("users")
 }
 
+model ResetPassword {
+  id        String   @id @default(uuid())
+  email     String   @db.VarChar(255)
+  token     String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("reset_passwords")
+}
+
 model Subscription {
   id           Int      @id @default(autoincrement())
   channelId    Int

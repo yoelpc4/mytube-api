@@ -19,26 +19,62 @@ const router = Router()
 router.get(
     '/',
     auth,
-    query('sort.field').if(query('sort.order').exists()).notEmpty().bail().isIn(['id', 'title', 'createdAt', 'updatedAt']).bail().trim(),
-    query('sort.order').if(query('sort.field').exists()).notEmpty().bail().isIn(['asc', 'desc']).bail().trim(),
-    query('skip').optional().isNumeric().bail().trim(),
-    query('take').optional().isNumeric().bail().trim(),
+    query('sort.field')
+        .if(query('sort.order').exists())
+        .notEmpty()
+        .bail()
+        .isIn(['id', 'title', 'createdAt', 'updatedAt'])
+        .bail()
+        .trim(),
+    query('sort.order')
+        .if(query('sort.field').exists())
+        .notEmpty()
+        .bail()
+        .isIn(['asc', 'desc'])
+        .bail()
+        .trim(),
+    query('skip')
+        .optional()
+        .isNumeric()
+        .bail()
+        .trim(),
+    query('take')
+        .optional()
+        .isNumeric()
+        .bail()
+        .trim(),
     getContents
 )
 
 router.get(
     '/feeds',
     anonymous,
-    query('cursor').optional().isNumeric().bail().trim(),
-    query('take').optional().isNumeric().bail().trim(),
+    query('cursor')
+        .optional()
+        .isNumeric()
+        .bail()
+        .trim(),
+    query('take')
+        .optional()
+        .isNumeric()
+        .bail()
+        .trim(),
     getContentFeeds
 )
 
 router.get(
     '/histories',
     auth,
-    query('cursor').optional().isNumeric().bail().trim(),
-    query('take').optional().isNumeric().bail().trim(),
+    query('cursor')
+        .optional()
+        .isNumeric()
+        .bail()
+        .trim(),
+    query('take')
+        .optional()
+        .isNumeric()
+        .bail()
+        .trim(),
     getContentHistories
 )
 
@@ -57,10 +93,29 @@ router.get(
 router.put(
     '/:id',
     auth,
-    body('title').notEmpty().bail().isString().bail().trim(),
-    body('description').optional().isString().bail().trim(),
-    body('tags').optional().isString().bail().trim(),
-    body('status').notEmpty().isString().bail().custom(IsValidStatusValidator).bail().trim(),
+    body('title')
+        .notEmpty()
+        .bail()
+        .isString()
+        .bail()
+        .trim(),
+    body('description')
+        .optional()
+        .isString()
+        .bail()
+        .trim(),
+    body('tags')
+        .optional()
+        .isString()
+        .bail()
+        .trim(),
+    body('status')
+        .notEmpty()
+        .isString()
+        .bail()
+        .custom(IsValidStatusValidator)
+        .bail()
+        .trim(),
     updateContent
 )
 

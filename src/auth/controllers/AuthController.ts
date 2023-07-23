@@ -1,12 +1,20 @@
 import { User } from '@prisma/client'
 import { Request, Response } from 'express'
 import { validationResult } from 'express-validator'
-import { StatusCodes } from 'http-status-codes'
 import { instanceToPlain, plainToInstance } from 'class-transformer';
-import { AuthService } from '../services';
+import { StatusCodes } from 'http-status-codes'
+import { AuthService } from '@/auth/services';
+import { UserResource } from '@/auth/resources';
+import {
+    ForgotPasswordDto,
+    LoginDto,
+    RegisterDto,
+    ResetPasswordDto,
+    UpdatePasswordDto,
+    UpdateProfileDto
+} from '@/auth/dto';
 import { UnauthorizedException } from '@/common/exceptions';
-import { UserResource } from '../resources';
-import { LoginDto, RegisterDto, UpdatePasswordDto, UpdateProfileDto } from '../dto';
+import { VALIDATION_ERROR_MESSAGE } from '@/constants';
 
 const authService = new AuthService()
 
@@ -15,7 +23,7 @@ export const register = async (req: Request, res: Response) => {
 
     if (! errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Please fix the following errors',
+            message: VALIDATION_ERROR_MESSAGE,
             errors: errors.array(),
         })
     }
@@ -32,7 +40,7 @@ export const register = async (req: Request, res: Response) => {
         console.log(error)
 
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: 'Failed to registering your account',
+            message: 'Failed to register account',
         })
     }
 }
@@ -42,7 +50,7 @@ export const login = async (req: Request, res: Response) => {
 
     if (! errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Please fix the following errors',
+            message: VALIDATION_ERROR_MESSAGE,
             errors: errors.array(),
         })
     }
@@ -65,7 +73,7 @@ export const login = async (req: Request, res: Response) => {
         }
 
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: 'Failed to logging in your account',
+            message: 'Failed to log in account',
         })
     }
 }
@@ -81,7 +89,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     if (! errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Please fix the following errors',
+            message: VALIDATION_ERROR_MESSAGE,
             errors: errors.array(),
         })
     }
@@ -98,7 +106,7 @@ export const updateProfile = async (req: Request, res: Response) => {
         console.log(error)
 
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: 'Failed to updating your profile',
+            message: 'Failed to update profile',
         })
     }
 }
@@ -108,7 +116,7 @@ export const updatePassword = async (req: Request, res: Response) => {
 
     if (! errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Please fix the following errors',
+            message: VALIDATION_ERROR_MESSAGE,
             errors: errors.array(),
         })
     }
@@ -125,7 +133,67 @@ export const updatePassword = async (req: Request, res: Response) => {
         console.log(error)
 
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: 'Failed to updating your password',
+            message: 'Failed to updating password',
+        })
+    }
+}
+
+export const forgotPassword = async (req: Request, res: Response) => {
+    const errors = validationResult(req)
+
+    if (! errors.isEmpty()) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            message: VALIDATION_ERROR_MESSAGE,
+            errors: errors.array(),
+        })
+    }
+
+    const dto = plainToInstance(ForgotPasswordDto, req.body, { excludeExtraneousValues: true })
+
+    try {
+        const isSent = await authService.forgotPassword(dto)
+
+        if (!isSent) {
+            return res.status(StatusCodes.FAILED_DEPENDENCY).json({
+                message: 'The email has been rejected by the mail server',
+            })
+        }
+
+        return res.status(StatusCodes.OK).json({
+            message: 'Password reset request email has been sent',
+        })
+    } catch (error) {
+        console.log(error)
+
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: 'Failed to send password reset request email',
+        })
+    }
+}
+
+export const resetPassword = async (req: Request, res: Response) => {
+    const errors = validationResult(req)
+
+    if (! errors.isEmpty()) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            message: VALIDATION_ERROR_MESSAGE,
+            errors: errors.array(),
+        })
+    }
+
+    const dto = plainToInstance(ResetPasswordDto, req.body, { excludeExtraneousValues: true })
+
+    try {
+        await authService.resetPassword(dto)
+
+        return res.status(StatusCodes.OK).json({
+            message: 'Reset password succeed',
+        })
+    } catch (error) {
+        console.log(error)
+
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: 'Failed to reset password',
         })
     }
 }

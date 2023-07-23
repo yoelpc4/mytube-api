@@ -15,6 +15,16 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
+CREATE TABLE "reset_passwords" (
+    "id" TEXT NOT NULL,
+    "email" VARCHAR(255) NOT NULL,
+    "token" VARCHAR(255) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "reset_passwords_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "subscriptions" (
     "id" SERIAL NOT NULL,
     "channelId" INTEGER NOT NULL,
@@ -69,6 +79,9 @@ CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE INDEX "reset_passwords_email_idx" ON "reset_passwords"("email");
 
 -- CreateIndex
 CREATE INDEX "subscriptions_channelId_subscriberId_idx" ON "subscriptions"("channelId", "subscriberId");

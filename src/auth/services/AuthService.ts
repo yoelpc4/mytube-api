@@ -1,20 +1,29 @@
-import { hash, verify } from 'argon2';
-import { JwtPayload, sign } from 'jsonwebtoken';
 import { User } from '@prisma/client';
-import { prisma } from '@/common/services';
+import { hash, verify } from 'argon2';
+import { randomBytes } from 'crypto';
+import { DateTime } from 'luxon'
+import { JwtPayload, sign } from 'jsonwebtoken';
+import { join } from 'path';
+import { cwd } from 'process';
+import { prisma, sendEmail } from '@/common/services';
 import { UnauthorizedException } from '@/common/exceptions';
-import { LoginDto, RegisterDto, UpdatePasswordDto, UpdateProfileDto } from '@/auth/dto';
+import {
+    ForgotPasswordDto,
+    LoginDto,
+    RegisterDto,
+    ResetPasswordDto,
+    UpdatePasswordDto,
+    UpdateProfileDto
+} from '@/auth/dto';
 
 export class AuthService {
     async register(dto: RegisterDto) {
-        const hashedPassword = await hash(dto.password)
-
-        const user = await prisma.$transaction(tx => tx.user.create({
+        const user = await prisma.$transaction(async tx => tx.user.create({
             data: {
                 name: dto.name,
                 username: dto.username,
                 email: dto.email,
-                password: hashedPassword,
+                password: await hash(dto.password),
             },
         }))
 
@@ -59,11 +68,9 @@ export class AuthService {
     }
 
     async updatePassword(dto: UpdatePasswordDto, user: User) {
-        const hashedPassword = await hash(dto.password)
-
         await prisma.user.update({
             data: {
-              password: hashedPassword,
+              password: await hash(dto.password),
             },
             where: {
                 id: user.id,
@@ -71,22 +78,70 @@ export class AuthService {
         })
     }
 
-    private signAccessToken(id: number) {
-        const now = Math.floor(Date.now() / 1000)
+    async forgotPassword(dto: ForgotPasswordDto) {
+        const user = await prisma.user.findUnique({
+            select: {
+                name: true,
+            },
+            where: {
+                email: dto.email,
+            },
+        })
 
+        await prisma.resetPassword.deleteMany({
+            where: {
+                email: dto.email,
+            },
+        })
+
+        const token = randomBytes(32).toString('hex')
+
+        await prisma.resetPassword.create({
+            data: {
+                email: dto.email,
+                token: await hash(token),
+            },
+        })
+
+        const url = new URL(`${process.env.FRONTEND_URL}/reset-password`)
+        url.searchParams.set('email', dto.email)
+        url.searchParams.set('token', token)
+
+        const data = {
+            name: user?.name,
+            link: url.href,
+        }
+
+        const templatePath = join(cwd(), 'src', 'auth', 'templates', 'resetPassword.handlebars')
+
+        return await sendEmail(dto.email, 'Password Reset Request', data, templatePath)
+    }
+
+    async resetPassword(dto: ResetPasswordDto) {
+        await prisma.user.update({
+            data: {
+                password: await hash(dto.password),
+            },
+            where: {
+                email: dto.email,
+            },
+        })
+
+        await prisma.resetPassword.deleteMany({
+            where: {
+                email: dto.email,
+            },
+        })
+    }
+
+    private signAccessToken(id: number) {
         const payload: JwtPayload = {
             sub: id.toString(),
-            exp: now + (60 * 60), // 1 hour later
-            iat: now,
+            exp: DateTime.now().plus({hour: 1}).toUnixInteger(),
+            iat: DateTime.now().toUnixInteger(),
             iss: process.env.JWT_ISSUER,
         }
 
-        const secret = process.env.JWT_SECRET
-
-        if (!secret) {
-            throw new Error('JWT_SECRET env value is undefined')
-        }
-
-        return sign(payload, secret)
+        return sign(payload, process.env.JWT_SECRET ?? 'secret')
     }
 }

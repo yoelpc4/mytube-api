@@ -10,10 +10,11 @@ import {
     GetContentHistoriesDto,
     GetContentFeedsDto,
     UpdateContentDto,
-} from '../dto';
+} from '@/content/dto';
 import { ContentResource, ContentViewResource } from '@/content/resources';
 import { NotFoundException } from '@/common/exceptions';
 import { PaginationResource } from '@/common/resources';
+import { VALIDATION_ERROR_MESSAGE } from '@/constants';
 
 const contentService = new ContentService()
 
@@ -22,7 +23,7 @@ export const getContents = async (req: Request, res: Response) => {
 
     if (!errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Please fix the following errors',
+            message: VALIDATION_ERROR_MESSAGE,
             errors: errors.array(),
         })
     }
@@ -54,7 +55,7 @@ export const getContentFeeds = async (req: Request, res: Response) => {
 
     if (!errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Please fix the following errors',
+            message: VALIDATION_ERROR_MESSAGE,
             errors: errors.array(),
         })
     }
@@ -86,7 +87,7 @@ export const getContentHistories = async (req: Request, res: Response) => {
 
     if (!errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Please fix the following errors',
+            message: VALIDATION_ERROR_MESSAGE,
             errors: errors.array(),
         })
     }
@@ -171,7 +172,7 @@ export const updateContent = async (req: Request, res: Response) => {
 
     if (!errors.isEmpty()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-            message: 'Please fix the following errors',
+            message: VALIDATION_ERROR_MESSAGE,
             errors: errors.array(),
         })
     }
