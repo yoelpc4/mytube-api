@@ -1,0 +1,6 @@
+export * from './AlreadySubscribedToChannelException'
+export * from './NeverSubscribedToChannelException'
+export * from './NotFoundException'
+export * from './SubscribeToOwnChannelException'
+export * from './UnauthorizedException'
+export * from './UnsubscribeToOwnChannelException'

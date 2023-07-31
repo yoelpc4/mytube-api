@@ -1,6 +1,0 @@
-export * from './ForgotPasswordDto'
-export * from './LoginDto'
-export * from './RegisterDto'
-export * from './ResetPasswordDto'
-export * from './UpdatePasswordDto'
-export * from './UpdateProfileDto'

@@ -1,13 +1,12 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
-import fileUpload from 'express-fileupload';
-import passport from 'passport';
-import { join } from 'path';
-import { cwd } from 'process';
-import router from '@/router';
-import { configureStrategy } from '@/auth/utils';
+import fileUpload from 'express-fileupload'
+import { join } from 'path'
+import { cwd } from 'process'
 import 'reflect-metadata'
+import router from '@/router'
+import { passport } from '@/config'
 
 dotenv.config()
 
@@ -29,10 +28,8 @@ app.use(fileUpload({
     tempFileDir: join(cwd(), 'temp'),
     useTempFiles: true,
 }))
-
-app.use(passport.initialize())
-configureStrategy(passport)
-
 app.use('/', router)
+
+passport.configure(app)
 
 app.listen(port, () => console.log(`Server is listening on port ${port}`))
