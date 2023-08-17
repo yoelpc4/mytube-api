@@ -19,7 +19,11 @@ interface ContentHistoriesFindManyArgs extends Prisma.ContentViewFindManyArgs {
     },
 }
 
-async function getContents(dto: GetContentsDto, user: User) {
+const getVideoPath = (basename: string) => join(cwd(), 'public', 'videos', basename)
+
+const getThumbnailPath = (basename: string) => join(cwd(), 'public', 'thumbnails', basename)
+
+const getContents = async (dto: GetContentsDto, user: User) => {
     const findManyArgs: Prisma.ContentFindManyArgs = {
         where: {
             createdById: user.id,
@@ -46,7 +50,7 @@ async function getContents(dto: GetContentsDto, user: User) {
     }
 }
 
-async function getContentFeeds(dto: GetContentFeedsDto) {
+const getContentFeeds = async (dto: GetContentFeedsDto) => {
     const findManyArgs: Prisma.ContentFindManyArgs = {
         include: {
             createdBy: {
@@ -90,7 +94,7 @@ async function getContentFeeds(dto: GetContentFeedsDto) {
     }
 }
 
-async function getContentHistories(dto: GetContentHistoriesDto, user: User) {
+const getContentHistories = async (dto: GetContentHistoriesDto, user: User) => {
     const findManyArgs: ContentHistoriesFindManyArgs = {
         select: {
             id: true,
@@ -143,7 +147,7 @@ async function getContentHistories(dto: GetContentHistoriesDto, user: User) {
     }
 }
 
-async function createContent(dto: CreateContentDto, user: User) {
+const createContent = async (dto: CreateContentDto, user: User) => {
     const videoFilename = `${Date.now()}${Math.round(Math.random() * 1E9)}`
 
     const videoBasename = `${videoFilename}${extname(dto.video.name)}`
@@ -163,7 +167,7 @@ async function createContent(dto: CreateContentDto, user: User) {
     })
 }
 
-async function findContent(id: number, user?: User) {
+const findContent = async (id: number, user?: User) => {
     const content = await db.client.content.findUnique({
         include: {
             createdBy: {
@@ -296,7 +300,7 @@ async function findContent(id: number, user?: User) {
     }
 }
 
-async function updateContent(id: number, dto: UpdateContentDto) {
+const updateContent = async (id: number, dto: UpdateContentDto) => {
     const content = await db.client.content.findUnique({
         select: {
             id: true,
@@ -354,7 +358,7 @@ async function updateContent(id: number, dto: UpdateContentDto) {
     })
 }
 
-async function deleteContent(id: number) {
+const deleteContent = async (id: number) => {
     const content = await db.client.content.findUnique({
         select: {
             id: true,
@@ -397,7 +401,7 @@ async function deleteContent(id: number) {
     })
 }
 
-async function likeContent(id: number, user: User) {
+const likeContent = async (id: number, user: User) => {
     const content = await db.client.content.findUnique({
         select: {
             id: true,
@@ -443,7 +447,7 @@ async function likeContent(id: number, user: User) {
     })
 }
 
-async function dislikeContent(id: number, user: User) {
+const dislikeContent = async (id: number, user: User) => {
     const content = await db.client.content.findUnique({
         select: {
             id: true,
@@ -487,14 +491,6 @@ async function dislikeContent(id: number, user: User) {
             })
         }
     })
-}
-
-function getVideoPath(basename: string) {
-    return join(cwd(), 'public', 'videos', basename)
-}
-
-function getThumbnailPath(basename: string) {
-    return join(cwd(), 'public', 'thumbnails', basename)
 }
 
 export {

@@ -16,7 +16,32 @@ import {
 import { UnauthorizedException } from '@/exceptions'
 import { db, mail } from '@/utils'
 
-async function register(dto: RegisterDto) {
+const signAccessToken = (id: number) => {
+    const issuer = process.env.JWT_ISSUER
+
+    if (!issuer) {
+        throw new Error('Undefined JWT issuer')
+    }
+
+    const secret = process.env.JWT_SECRET
+
+    if (!secret) {
+        throw new Error('Undefined JWT secret')
+    }
+
+    const now = DateTime.now()
+
+    const payload: JwtPayload = {
+        sub: id.toString(),
+        exp: now.plus({hour: 1}).toUnixInteger(),
+        iat: now.toUnixInteger(),
+        iss: issuer,
+    }
+
+    return sign(payload, secret)
+}
+
+const register = async (dto: RegisterDto) => {
     const user = await db.client.$transaction(async tx => tx.user.create({
         data: {
             name: dto.name,
@@ -26,15 +51,16 @@ async function register(dto: RegisterDto) {
         },
     }))
 
-    return signAccessToken(user.id)
+    const accessToken = signAccessToken(user.id)
+
+    return {
+        accessToken,
+        user,
+    }
 }
 
-async function login(dto: LoginDto) {
+const login = async (dto: LoginDto) => {
     const user = await db.client.user.findUnique({
-        select: {
-            id: true,
-            password: true,
-        },
         where: {
             username: dto.username,
         },
@@ -50,10 +76,15 @@ async function login(dto: LoginDto) {
         throw new UnauthorizedException()
     }
 
-    return signAccessToken(user.id)
+    const accessToken = signAccessToken(user.id)
+
+    return {
+        accessToken,
+        user,
+    }
 }
 
-async function updateProfile(dto: UpdateProfileDto, user: User) {
+const updateProfile = async (dto: UpdateProfileDto, user: User) => {
     return await db.client.user.update({
         data: {
             name: dto.name,
@@ -66,7 +97,7 @@ async function updateProfile(dto: UpdateProfileDto, user: User) {
     })
 }
 
-async function updatePassword(dto: UpdatePasswordDto, user: User) {
+const updatePassword = async (dto: UpdatePasswordDto, user: User) => {
     await db.client.user.update({
         data: {
             password: await hash(dto.password),
@@ -77,7 +108,7 @@ async function updatePassword(dto: UpdatePasswordDto, user: User) {
     })
 }
 
-async function forgotPassword(dto: ForgotPasswordDto) {
+const forgotPassword = async (dto: ForgotPasswordDto) => {
     const user = await db.client.user.findUnique({
         select: {
             name: true,
@@ -102,7 +133,7 @@ async function forgotPassword(dto: ForgotPasswordDto) {
         },
     })
 
-    const url = new URL(`${process.env.FRONTEND_URL}/reset-password`)
+    const url = new URL(`${process.env.APP_URL}/reset-password`)
     url.searchParams.set('email', dto.email)
     url.searchParams.set('token', token)
 
@@ -116,7 +147,7 @@ async function forgotPassword(dto: ForgotPasswordDto) {
     return await mail.send(dto.email, 'Password Reset Request', data, templatePath)
 }
 
-async function resetPassword(dto: ResetPasswordDto) {
+const resetPassword = async (dto: ResetPasswordDto) => {
     await db.client.user.update({
         data: {
             password: await hash(dto.password),
@@ -131,17 +162,6 @@ async function resetPassword(dto: ResetPasswordDto) {
             email: dto.email,
         },
     })
-}
-
-function signAccessToken(id: number) {
-    const payload: JwtPayload = {
-        sub: id.toString(),
-        exp: DateTime.now().plus({hour: 1}).toUnixInteger(),
-        iat: DateTime.now().toUnixInteger(),
-        iss: process.env.JWT_ISSUER,
-    }
-
-    return sign(payload, process.env.JWT_SECRET ?? 'secret')
 }
 
 export {

@@ -15,7 +15,7 @@ import { ContentResource, ContentViewResource, PaginationResource } from '@/reso
 import { NotFoundException } from '@/exceptions'
 import { sendValidationErrorResponse } from '@/helpers';
 
-async function getContents(req: Request, res: Response) {
+const getContents = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
@@ -44,7 +44,7 @@ async function getContents(req: Request, res: Response) {
     }
 }
 
-async function getContentFeeds(req: Request, res: Response) {
+const getContentFeeds = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
@@ -73,7 +73,7 @@ async function getContentFeeds(req: Request, res: Response) {
     }
 }
 
-async function getContentHistories(req: Request, res: Response) {
+const getContentHistories = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
@@ -102,7 +102,7 @@ async function getContentHistories(req: Request, res: Response) {
     }
 }
 
-async function createContent(req: Request, res: Response) {
+const createContent = async (req: Request, res: Response) => {
     if (!req.files || !req.files.video) {
         return res.status(StatusCodes.BAD_REQUEST).json({
             message: 'Field video is required',
@@ -126,7 +126,7 @@ async function createContent(req: Request, res: Response) {
     }
 }
 
-async function findContent(req: Request, res: Response) {
+const findContent = async (req: Request, res: Response) => {
     try {
         const {content, countLikes, countDislikes, relatedContents, isLiked, isDisliked} = await contentService.findContent(+req.params.id, req.user as User)
 
@@ -155,7 +155,7 @@ async function findContent(req: Request, res: Response) {
     }
 }
 
-async function updateContent(req: Request, res: Response) {
+const updateContent = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
@@ -193,7 +193,7 @@ async function updateContent(req: Request, res: Response) {
     }
 }
 
-async function deleteContent(req: Request, res: Response) {
+const deleteContent = async (req: Request, res: Response) => {
     try {
         await contentService.deleteContent(+req.params.id)
 
@@ -213,7 +213,7 @@ async function deleteContent(req: Request, res: Response) {
     }
 }
 
-async function likeContent(req: Request, res: Response) {
+const likeContent = async (req: Request, res: Response) => {
     try {
         await contentService.likeContent(+req.params.id, req.user as User)
 
@@ -235,7 +235,7 @@ async function likeContent(req: Request, res: Response) {
     }
 }
 
-async function dislikeContent(req: Request, res: Response) {
+const dislikeContent = async (req: Request, res: Response) => {
     try {
         await contentService.dislikeContent(+req.params.id, req.user as User)
 

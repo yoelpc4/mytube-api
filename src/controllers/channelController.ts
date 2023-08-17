@@ -15,7 +15,7 @@ import {
 import { ContentResource, PaginationResource, UserResource } from '@/resources'
 import { sendValidationErrorResponse } from '@/helpers';
 
-async function findChannel(req: Request, res: Response) {
+const findChannel = async (req: Request, res: Response) => {
     try {
         const channel = await channelService.findChannel(req.params.username, req.user as User)
 
@@ -37,7 +37,7 @@ async function findChannel(req: Request, res: Response) {
     }
 }
 
-async function getChannelContents(req: Request, res: Response) {
+const getChannelContents = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
@@ -66,7 +66,7 @@ async function getChannelContents(req: Request, res: Response) {
     }
 }
 
-async function subscribe(req: Request, res: Response) {
+const subscribe = async (req: Request, res: Response) => {
     try {
         await channelService.subscribe(+req.params.id, req.user as User)
 
@@ -99,7 +99,7 @@ async function subscribe(req: Request, res: Response) {
     }
 }
 
-async function unsubscribe(req: Request, res: Response) {
+const unsubscribe = async (req: Request, res: Response) => {
     try {
         await channelService.unsubscribe(+req.params.id, req.user as User)
 

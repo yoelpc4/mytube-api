@@ -1,5 +1,5 @@
 import { User } from '@prisma/client'
-import { Request, Response } from 'express'
+import { CookieOptions, Request, Response } from 'express'
 import { validationResult } from 'express-validator'
 import { instanceToPlain, plainToInstance } from 'class-transformer'
 import { StatusCodes } from 'http-status-codes'
@@ -16,21 +16,43 @@ import {
 import { UnauthorizedException } from '@/exceptions'
 import { sendValidationErrorResponse } from '@/helpers';
 
-async function register(req: Request, res: Response) {
+const jwtCookieName = process.env.JWT_COOKIE_NAME
+
+if (!jwtCookieName) {
+    throw new Error('Undefined JWT cookie name')
+}
+
+const jwtCookieDomain = process.env.CSRF_COOKIE_DOMAIN
+
+if (!jwtCookieDomain) {
+    throw new Error('Undefined JWT cookie domain')
+}
+
+const jwtCookieOptions: CookieOptions = {
+    domain: jwtCookieDomain,
+    secure: process.env.JWT_COOKIE_SECURE === 'true',
+    httpOnly: true,
+    sameSite: 'lax',
+}
+
+const register = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
         return sendValidationErrorResponse(res, errors.array())
     }
 
-    const dto = plainToInstance(RegisterDto, req.body, { excludeExtraneousValues: true })
+    const dto = plainToInstance(RegisterDto, req.body, {excludeExtraneousValues: true})
 
     try {
-        const accessToken = await authService.register(dto)
+        const {accessToken, user} = await authService.register(dto)
 
-        return res.status(StatusCodes.CREATED).json({
-            accessToken,
-        })
+        const userResource = instanceToPlain(new UserResource(user))
+
+        return res
+            .status(StatusCodes.CREATED)
+            .cookie(jwtCookieName, accessToken, jwtCookieOptions)
+            .json(userResource)
     } catch (error) {
         console.log(error)
 
@@ -40,21 +62,24 @@ async function register(req: Request, res: Response) {
     }
 }
 
-async function login(req: Request, res: Response) {
+const login = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
         return sendValidationErrorResponse(res, errors.array())
     }
 
-    const dto = plainToInstance(LoginDto, req.body, { excludeExtraneousValues: true })
+    const dto = plainToInstance(LoginDto, req.body, {excludeExtraneousValues: true})
 
     try {
-        const accessToken = await authService.login(dto)
+        const {accessToken, user} = await authService.login(dto)
 
-        return res.status(StatusCodes.OK).json({
-            accessToken,
-        })
+        const userResource = instanceToPlain(new UserResource(user))
+
+        return res
+            .status(StatusCodes.OK)
+            .cookie(jwtCookieName, accessToken, jwtCookieOptions)
+            .json(userResource)
     } catch (error) {
         console.log(error)
 
@@ -70,27 +95,29 @@ async function login(req: Request, res: Response) {
     }
 }
 
-function getUser(req: Request, res: Response) {
-    const userResource = instanceToPlain(new UserResource(req.user as User))
+const logout = (req: Request, res: Response) => res
+    .status(StatusCodes.NO_CONTENT)
+    .clearCookie(jwtCookieName, {
+        domain: jwtCookieDomain,
+        path: '/',
+    })
+    .send()
 
-    return res.json(userResource)
-}
+const getUser = (req: Request, res: Response) => res.json(instanceToPlain(new UserResource(req.user as User)))
 
-async function updateProfile(req: Request, res: Response) {
+const updateProfile = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
         return sendValidationErrorResponse(res, errors.array())
     }
 
-    const dto = plainToInstance(UpdateProfileDto, req.body, { excludeExtraneousValues: true })
+    const dto = plainToInstance(UpdateProfileDto, req.body, {excludeExtraneousValues: true})
 
     try {
         const user = await authService.updateProfile(dto, req.user as User)
 
-        const userResource = instanceToPlain(new UserResource(user))
-
-        return res.json(userResource)
+        return instanceToPlain(new UserResource(user))
     } catch (error) {
         console.log(error)
 
@@ -100,14 +127,14 @@ async function updateProfile(req: Request, res: Response) {
     }
 }
 
-async function updatePassword(req: Request, res: Response) {
+const updatePassword = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
         return sendValidationErrorResponse(res, errors.array())
     }
 
-    const dto = plainToInstance(UpdatePasswordDto, req.body, { excludeExtraneousValues: true })
+    const dto = plainToInstance(UpdatePasswordDto, req.body, {excludeExtraneousValues: true})
 
     try {
         await authService.updatePassword(dto, req.user as User)
@@ -124,14 +151,14 @@ async function updatePassword(req: Request, res: Response) {
     }
 }
 
-async function forgotPassword(req: Request, res: Response) {
+const forgotPassword = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
         return sendValidationErrorResponse(res, errors.array())
     }
 
-    const dto = plainToInstance(ForgotPasswordDto, req.body, { excludeExtraneousValues: true })
+    const dto = plainToInstance(ForgotPasswordDto, req.body, {excludeExtraneousValues: true})
 
     try {
         const isSent = await authService.forgotPassword(dto)
@@ -154,14 +181,14 @@ async function forgotPassword(req: Request, res: Response) {
     }
 }
 
-async function resetPassword(req: Request, res: Response) {
+const resetPassword = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
         return sendValidationErrorResponse(res, errors.array())
     }
 
-    const dto = plainToInstance(ResetPasswordDto, req.body, { excludeExtraneousValues: true })
+    const dto = plainToInstance(ResetPasswordDto, req.body, {excludeExtraneousValues: true})
 
     try {
         await authService.resetPassword(dto)
@@ -181,6 +208,7 @@ async function resetPassword(req: Request, res: Response) {
 export {
     register,
     login,
+    logout,
     getUser,
     updateProfile,
     updatePassword,

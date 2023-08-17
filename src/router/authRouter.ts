@@ -66,6 +66,12 @@ router.post(
     authController.login
 )
 
+router.post(
+    '/logout',
+    auth,
+    authController.logout
+)
+
 router.get(
     '/user',
     auth,

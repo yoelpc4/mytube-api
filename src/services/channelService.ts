@@ -2,24 +2,27 @@ import { ContentStatus, Prisma, User } from '@prisma/client'
 import pick from 'lodash/pick'
 import { GetChannelContentsDto } from '@/dto'
 import {
-    AlreadySubscribedToChannelException, NeverSubscribedToChannelException,
+    AlreadySubscribedToChannelException,
+    NeverSubscribedToChannelException,
     NotFoundException,
     SubscribeToOwnChannelException,
     UnsubscribeToOwnChannelException,
 } from '@/exceptions'
 import { db } from '@/utils'
 
-async function findChannel(username: string, user?: User) {
+const findChannel = async (username: string, user?: User) => {
     const channel = await db.client.user.findUnique({
         include: {
-            channelSubscriptions: {
-                select: {
-                    id: true,
-                    channelId: true,
-                    subscriberId: true,
-                },
-                where: {
-                    subscriberId: user?.id,
+            ...user && {
+                channelSubscriptions: {
+                    select: {
+                        id: true,
+                        channelId: true,
+                        subscriberId: true,
+                    },
+                    where: {
+                        subscriberId: user.id,
+                    },
                 },
             },
             _count: {
@@ -41,7 +44,7 @@ async function findChannel(username: string, user?: User) {
     return channel
 }
 
-async function getChannelContents(createdById: number, dto: GetChannelContentsDto) {
+const getChannelContents = async (createdById: number, dto: GetChannelContentsDto) => {
     const findManyArgs: Prisma.ContentFindManyArgs = {
         include: {
             _count: {
@@ -79,7 +82,7 @@ async function getChannelContents(createdById: number, dto: GetChannelContentsDt
     }
 }
 
-async function subscribe(channelId: number, user: User) {
+const subscribe = async (channelId: number, user: User) => {
     if (channelId === user.id) {
         throw new SubscribeToOwnChannelException(channelId)
     }
@@ -119,7 +122,7 @@ async function subscribe(channelId: number, user: User) {
     })
 }
 
-async function unsubscribe(channelId: number, user: User) {
+const unsubscribe = async (channelId: number, user: User) => {
     if (channelId === user.id) {
         throw new UnsubscribeToOwnChannelException(channelId)
     }
