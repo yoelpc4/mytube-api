@@ -144,7 +144,7 @@ const forgotPassword = async (dto: ForgotPasswordDto) => {
 
     const templatePath = join(cwd(), 'src', 'templates', 'resetPassword.handlebars')
 
-    return await mail.send(dto.email, 'Password Reset Request', data, templatePath)
+    return await mail.send(dto.email, 'Reset Password', data, templatePath)
 }
 
 const resetPassword = async (dto: ResetPasswordDto) => {

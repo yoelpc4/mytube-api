@@ -4,7 +4,7 @@ import { DateTime } from 'luxon'
 import { db } from '@/utils'
 
 export const IsResetPasswordTokenValidValidator: CustomValidator = async (input, {req}) => {
-    const errorMessage = 'Invalid password reset token, please request another!'
+    const errorMessage = 'Invalid reset password request, please request another!'
 
     const resetPassword = await db.client.resetPassword.findFirst({
         select: {

@@ -165,18 +165,18 @@ const forgotPassword = async (req: Request, res: Response) => {
 
         if (!isSent) {
             return res.status(StatusCodes.FAILED_DEPENDENCY).json({
-                message: 'The email has been rejected by the mail server',
+                message: 'The email address has been rejected by the mail server',
             })
         }
 
         return res.status(StatusCodes.OK).json({
-            message: 'Password reset request email has been sent',
+            message: 'Reset password link email has been sent',
         })
     } catch (error) {
         console.log(error)
 
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: 'Failed to send password reset request email',
+            message: 'Failed to send reset password link email',
         })
     }
 }

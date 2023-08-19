@@ -8,7 +8,6 @@ import {
     IsEmailUniqueIgnoreAuthUserValidator,
     IsEmailUniqueValidator,
     IsPasswordConfirmationMatchValidator,
-    IsResetPasswordTokenNotRecentlyCreatedValidator,
     IsResetPasswordTokenValidValidator,
     IsUsernameUniqueIgnoreAuthUserValidator,
     IsUsernameUniqueValidator,
@@ -136,8 +135,6 @@ router.post(
         .isEmail()
         .bail()
         .custom(IsEmailExistsValidator)
-        .bail()
-        .custom(IsResetPasswordTokenNotRecentlyCreatedValidator)
         .bail()
         .trim()
         .normalizeEmail(),
