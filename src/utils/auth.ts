@@ -11,22 +11,22 @@ if (!issuer) {
     throw new Error('Undefined JWT issuer')
 }
 
-const secret = process.env.JWT_SECRET
+const accessTokenSecret = process.env.JWT_ACCESS_TOKEN_SECRET
 
-if (!secret) {
-    throw new Error('Undefined JWT secret')
+if (!accessTokenSecret) {
+    throw new Error('Undefined JWT access token secret')
 }
 
-const cookieName = process.env.JWT_COOKIE_NAME
+const accessTokenCookieName = process.env.JWT_ACCESS_TOKEN_COOKIE_NAME
 
-if (!cookieName) {
-    throw new Error('Undefined JWT cookie name')
+if (!accessTokenCookieName) {
+    throw new Error('Undefined JWT access token cookie name')
 }
 
 const jwtOptions: StrategyOptions = {
     issuer,
-    jwtFromRequest: (req: Request) => req.cookies?.[`${cookieName}`],
-    secretOrKey: secret,
+    jwtFromRequest: (req: Request) => req.cookies[accessTokenCookieName],
+    secretOrKey: accessTokenSecret,
 }
 
 const setup = (app: Express) => {

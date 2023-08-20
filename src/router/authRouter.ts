@@ -66,6 +66,53 @@ router.post(
 )
 
 router.post(
+    '/refresh',
+    authController.refresh,
+)
+
+router.post(
+    '/forgot-password',
+    body('email')
+        .notEmpty()
+        .bail()
+        .isEmail()
+        .bail()
+        .custom(IsEmailExistsValidator)
+        .bail()
+        .trim()
+        .normalizeEmail(),
+    authController.forgotPassword
+)
+
+router.post(
+    '/reset-password',
+    body('email')
+        .notEmpty()
+        .bail()
+        .isEmail()
+        .bail()
+        .custom(IsResetPasswordTokenValidValidator)
+        .bail()
+        .trim()
+        .normalizeEmail(),
+    body('token')
+        .notEmpty()
+        .bail()
+        .trim(),
+    body('password')
+        .notEmpty()
+        .bail()
+        .isLength({min: 8})
+        .bail()
+        .trim(),
+    body('passwordConfirmation')
+        .notEmpty()
+        .bail()
+        .custom(IsPasswordConfirmationMatchValidator),
+    authController.resetPassword
+)
+
+router.post(
     '/logout',
     auth,
     authController.logout
@@ -125,48 +172,6 @@ router.post(
         .bail()
         .custom(IsPasswordConfirmationMatchValidator),
     authController.updatePassword
-)
-
-router.post(
-    '/forgot-password',
-    body('email')
-        .notEmpty()
-        .bail()
-        .isEmail()
-        .bail()
-        .custom(IsEmailExistsValidator)
-        .bail()
-        .trim()
-        .normalizeEmail(),
-    authController.forgotPassword
-)
-
-router.post(
-    '/reset-password',
-    body('email')
-        .notEmpty()
-        .bail()
-        .isEmail()
-        .bail()
-        .custom(IsResetPasswordTokenValidValidator)
-        .bail()
-        .trim()
-        .normalizeEmail(),
-    body('token')
-        .notEmpty()
-        .bail()
-        .trim(),
-    body('password')
-        .notEmpty()
-        .bail()
-        .isLength({min: 8})
-        .bail()
-        .trim(),
-    body('passwordConfirmation')
-        .notEmpty()
-        .bail()
-        .custom(IsPasswordConfirmationMatchValidator),
-    authController.resetPassword
 )
 
 export default router

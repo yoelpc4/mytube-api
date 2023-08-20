@@ -16,12 +16,21 @@ CREATE TABLE "users" (
 
 -- CreateTable
 CREATE TABLE "reset_passwords" (
-    "id" TEXT NOT NULL,
+    "id" VARCHAR(36) NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "token" VARCHAR(255) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "reset_passwords_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "refresh_tokens" (
+    "id" VARCHAR(36) NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "token" VARCHAR(255) NOT NULL,
+
+    CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -84,6 +93,9 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE INDEX "reset_passwords_email_idx" ON "reset_passwords"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "refresh_tokens_userId_key" ON "refresh_tokens"("userId");
+
+-- CreateIndex
 CREATE INDEX "subscriptions_channelId_subscriberId_idx" ON "subscriptions"("channelId", "subscriberId");
 
 -- CreateIndex
@@ -91,6 +103,9 @@ CREATE INDEX "content_views_contentId_userId_idx" ON "content_views"("contentId"
 
 -- CreateIndex
 CREATE INDEX "content_likes_contentId_userId_idx" ON "content_likes"("contentId", "userId");
+
+-- AddForeignKey
+ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_channelId_fkey" FOREIGN KEY ("channelId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

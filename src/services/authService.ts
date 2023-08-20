@@ -1,60 +1,98 @@
 import { User } from '@prisma/client'
-import { hash, verify } from 'argon2'
+import { hash, verify as verifyHash } from 'argon2'
 import { randomBytes } from 'crypto'
 import { DateTime } from 'luxon'
-import { JwtPayload, sign } from 'jsonwebtoken'
+import { JwtPayload, sign, verify as verifyJwt } from 'jsonwebtoken'
 import { join } from 'path'
 import { cwd } from 'process'
 import {
     ForgotPasswordDto,
     LoginDto,
+    RefreshTokenDto,
     RegisterDto,
     ResetPasswordDto,
     UpdatePasswordDto,
     UpdateProfileDto
 } from '@/dto'
-import { UnauthorizedException } from '@/exceptions'
+import { NotFoundException, UnauthorizedException } from '@/exceptions'
 import { db, mail } from '@/utils'
 
-const signAccessToken = (id: number) => {
-    const issuer = process.env.JWT_ISSUER
+const issuer = process.env.JWT_ISSUER
 
-    if (!issuer) {
-        throw new Error('Undefined JWT issuer')
-    }
+if (!issuer) {
+    throw new Error('Undefined JWT issuer')
+}
 
-    const secret = process.env.JWT_SECRET
+const accessTokenSecret = process.env.JWT_ACCESS_TOKEN_SECRET
 
-    if (!secret) {
-        throw new Error('Undefined JWT secret')
-    }
+if (!accessTokenSecret) {
+    throw new Error('Undefined JWT access token secret')
+}
 
+const refreshTokenSecret = process.env.JWT_REFRESH_TOKEN_SECRET
+
+if (!refreshTokenSecret) {
+    throw new Error('Undefined JWT refresh token secret')
+}
+
+const signAccessToken = (userId: number) => {
     const now = DateTime.now()
 
     const payload: JwtPayload = {
-        sub: id.toString(),
-        exp: now.plus({hour: 1}).toUnixInteger(),
+        sub: userId.toString(),
+        exp: now.plus({minutes: 15}).toUnixInteger(),
         iat: now.toUnixInteger(),
         iss: issuer,
     }
 
-    return sign(payload, secret)
+    return sign(payload, accessTokenSecret)
+}
+
+const signRefreshToken = async (userId: number) => {
+    const now = DateTime.now()
+
+    const payload: JwtPayload = {
+        sub: userId.toString(),
+        exp: now.plus({day: 1}).toUnixInteger(),
+        iat: now.toUnixInteger(),
+        iss: issuer,
+    }
+
+    const refreshToken = sign(payload, refreshTokenSecret)
+
+    await db.client.refreshToken.deleteMany({
+        where: {
+            userId,
+        },
+    })
+
+    await db.client.refreshToken.create({
+        data: {
+            userId,
+            token: await hash(refreshToken),
+        },
+    })
+
+    return refreshToken
 }
 
 const register = async (dto: RegisterDto) => {
-    const user = await db.client.$transaction(async tx => tx.user.create({
+    const user = await db.client.user.create({
         data: {
             name: dto.name,
             username: dto.username,
             email: dto.email,
             password: await hash(dto.password),
         },
-    }))
+    })
 
     const accessToken = signAccessToken(user.id)
 
+    const refreshToken = await signRefreshToken(user.id)
+
     return {
         accessToken,
+        refreshToken,
         user,
     }
 }
@@ -70,7 +108,7 @@ const login = async (dto: LoginDto) => {
         throw new UnauthorizedException()
     }
 
-    const isPasswordMatch = await verify(user.password, dto.password)
+    const isPasswordMatch = await verifyHash(user.password, dto.password)
 
     if (!isPasswordMatch) {
         throw new UnauthorizedException()
@@ -78,34 +116,46 @@ const login = async (dto: LoginDto) => {
 
     const accessToken = signAccessToken(user.id)
 
+    const refreshToken = await signRefreshToken(user.id)
+
     return {
         accessToken,
+        refreshToken,
         user,
     }
 }
 
-const updateProfile = async (dto: UpdateProfileDto, user: User) => {
-    return await db.client.user.update({
-        data: {
-            name: dto.name,
-            username: dto.username,
-            email: dto.email,
-        },
-        where: {
-            id: user.id,
-        },
+const refresh = async (dto: RefreshTokenDto) => {
+    const {sub} = verifyJwt(dto.token, refreshTokenSecret, {
+        issuer,
     })
-}
 
-const updatePassword = async (dto: UpdatePasswordDto, user: User) => {
-    await db.client.user.update({
-        data: {
-            password: await hash(dto.password),
+    if (!sub) {
+        throw new NotFoundException('Undefined sub')
+    }
+
+    const userId = +sub
+
+    const refreshToken = await db.client.refreshToken.findUnique({
+        select: {
+          token: true,
         },
         where: {
-            id: user.id,
-        },
+            userId,
+        }
     })
+
+    if (!refreshToken) {
+        throw new NotFoundException('Refresh token not found')
+    }
+
+    const isRefreshTokenMatch = await verifyHash(refreshToken.token, dto.token)
+
+    if (!isRefreshTokenMatch) {
+        throw new UnauthorizedException('Refresh token not match')
+    }
+
+    return signAccessToken(userId)
 }
 
 const forgotPassword = async (dto: ForgotPasswordDto) => {
@@ -164,11 +214,36 @@ const resetPassword = async (dto: ResetPasswordDto) => {
     })
 }
 
+const updateProfile = async (dto: UpdateProfileDto, user: User) => {
+    return await db.client.user.update({
+        data: {
+            name: dto.name,
+            username: dto.username,
+            email: dto.email,
+        },
+        where: {
+            id: user.id,
+        },
+    })
+}
+
+const updatePassword = async (dto: UpdatePasswordDto, user: User) => {
+    await db.client.user.update({
+        data: {
+            password: await hash(dto.password),
+        },
+        where: {
+            id: user.id,
+        },
+    })
+}
+
 export {
     register,
     login,
-    updateProfile,
-    updatePassword,
+    refresh,
     forgotPassword,
     resetPassword,
+    updateProfile,
+    updatePassword,
 }
