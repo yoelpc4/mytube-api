@@ -39,11 +39,11 @@ export class ContentResource {
 
     @Expose()
     @Transform(({ obj }) => obj._count?.contentViews, { toPlainOnly: true })
-    countViews?: number
+    viewsCount?: number
 
-    countLikes?: number
+    likesCount?: number
 
-    countDislikes?: number
+    dislikesCount?: number
 
     isLiked?: boolean
 

@@ -216,7 +216,7 @@ const findContent = async (id: number, user?: User) => {
 
     ++content._count.contentViews
 
-    const [countLikes, countDislikes, relatedContents, contentLike, contentDislike] = await Promise.all([
+    const [likesCount, dislikesCount, relatedContents, contentLike, contentDislike] = await Promise.all([
         db.client.contentLike.count({
             where: {
                 contentId: id,
@@ -292,8 +292,8 @@ const findContent = async (id: number, user?: User) => {
 
     return {
         content,
-        countLikes,
-        countDislikes,
+        likesCount,
+        dislikesCount,
         relatedContents,
         isLiked: !!contentLike,
         isDisliked: !!contentDislike,

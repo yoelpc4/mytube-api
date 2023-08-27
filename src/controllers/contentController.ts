@@ -128,12 +128,12 @@ const createContent = async (req: Request, res: Response) => {
 
 const findContent = async (req: Request, res: Response) => {
     try {
-        const {content, countLikes, countDislikes, relatedContents, isLiked, isDisliked} = await contentService.findContent(+req.params.id, req.user as User)
+        const {content, likesCount, dislikesCount, relatedContents, isLiked, isDisliked} = await contentService.findContent(+req.params.id, req.user as User)
 
         const contentResource = instanceToPlain(new ContentResource({
             ...content,
-            countLikes,
-            countDislikes,
+            likesCount,
+            dislikesCount,
             relatedContents,
             isLiked,
             isDisliked,

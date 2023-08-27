@@ -27,11 +27,11 @@ export class UserResource {
 
     @Expose()
     @Transform(({ obj }) => obj._count?.contents, { toPlainOnly: true })
-    countContents?: number
+    contentsCount?: number
 
     @Expose()
     @Transform(({ obj }) => obj._count?.channelSubscriptions, { toPlainOnly: true })
-    countChannelSubscriptions?: number
+    channelSubscriptionsCount?: number
 
     @Exclude()
     _count?: Partial<Prisma.UserCountOutputType>
