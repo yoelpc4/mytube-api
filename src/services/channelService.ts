@@ -1,6 +1,6 @@
 import { ContentStatus, Prisma, User } from '@prisma/client'
 import pick from 'lodash/pick'
-import { GetChannelContentsDto } from '@/dto'
+import { GetChannelContentsDto, UpdateChannelDto } from '@/dto'
 import {
     AlreadySubscribedToChannelException,
     NeverSubscribedToChannelException,
@@ -8,7 +8,12 @@ import {
     SubscribeToOwnChannelException,
     UnsubscribeToOwnChannelException,
 } from '@/exceptions'
-import { db } from '@/utils'
+import { db, filesystem } from '@/utils'
+import { join } from 'path'
+
+const getProfilePath = (basename = '') => join('channel', 'profile', basename)
+
+const getBannerPath = (basename = '') => join('channel', 'banner', basename)
 
 const findChannel = async (username: string, user?: User) => {
     const channel = await db.client.user.findUnique({
@@ -161,9 +166,45 @@ const unsubscribe = async (channelId: number, user: User) => {
     })
 }
 
+const updateChannel = async (dto: UpdateChannelDto, user: User) => {
+    const data: Prisma.UserUncheckedUpdateInput = {
+        name: dto.name,
+        username: dto.username,
+        email: dto.email,
+    }
+
+    if (dto.profile) {
+        data.profileBasename = await filesystem.save(dto.profile, getProfilePath())
+    }
+
+    if (dto.banner) {
+        data.bannerBasename = await filesystem.save(dto.banner, getBannerPath())
+    }
+
+    const updatedUser = await db.client.user.update({
+        data,
+        where: {
+            id: user.id,
+        },
+    })
+
+    if (dto.profile && user.profileBasename) {
+        await filesystem.remove(getProfilePath(user.profileBasename))
+    }
+
+    if (dto.banner && user.bannerBasename) {
+        await filesystem.remove(getBannerPath(user.bannerBasename))
+    }
+
+    return updatedUser
+}
+
 export {
+    getProfilePath,
+    getBannerPath,
     findChannel,
     getChannelContents,
     subscribe,
     unsubscribe,
+    updateChannel,
 }

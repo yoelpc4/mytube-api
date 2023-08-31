@@ -39,7 +39,7 @@ const getContents = async (req: Request, res: Response) => {
         console.log(error)
 
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: 'Get contents failed'
+            message: 'Get content failed'
         })
     }
 }
@@ -128,7 +128,14 @@ const createContent = async (req: Request, res: Response) => {
 
 const findContent = async (req: Request, res: Response) => {
     try {
-        const {content, likesCount, dislikesCount, relatedContents, isLiked, isDisliked} = await contentService.findContent(+req.params.id, req.user as User)
+        const {
+            content,
+            likesCount,
+            dislikesCount,
+            relatedContents,
+            isLiked,
+            isDisliked
+        } = await contentService.findContent(+req.params.id, req.user as User)
 
         const contentResource = instanceToPlain(new ContentResource({
             ...content,
@@ -163,14 +170,12 @@ const updateContent = async (req: Request, res: Response) => {
     }
 
     const dto = plainToInstance(UpdateContentDto, {
-            title: req.body.title,
-            description: req.body.description,
-            tags: req.body.tags,
-            thumbnail: req.files?.thumbnail,
-            status: req.body.status,
-        },
-        {excludeExtraneousValues: true}
-    )
+        title: req.body.title,
+        description: req.body.description,
+        tags: req.body.tags,
+        thumbnail: req.files?.thumbnail,
+        status: req.body.status,
+    }, {excludeExtraneousValues: true})
 
     try {
         const content = await contentService.updateContent(+req.params.id, dto)

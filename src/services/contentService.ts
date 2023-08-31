@@ -1,17 +1,10 @@
 import { ContentStatus, Prisma, User } from '@prisma/client'
 import { rm, stat } from 'fs/promises'
-import { cwd } from 'process'
-import { extname, join } from 'path'
+import { join } from 'path'
 import pick from 'lodash/pick'
-import {
-    CreateContentDto,
-    GetContentFeedsDto,
-    GetContentHistoriesDto,
-    GetContentsDto,
-    UpdateContentDto,
-} from '@/dto'
+import { CreateContentDto, GetContentFeedsDto, GetContentHistoriesDto, GetContentsDto, UpdateContentDto, } from '@/dto'
 import { NotFoundException } from '@/exceptions'
-import { db } from '@/utils'
+import { db, filesystem } from '@/utils'
 
 interface ContentHistoriesFindManyArgs extends Prisma.ContentViewFindManyArgs {
     select: Prisma.ContentViewSelect & {
@@ -19,9 +12,9 @@ interface ContentHistoriesFindManyArgs extends Prisma.ContentViewFindManyArgs {
     },
 }
 
-const getVideoPath = (basename: string) => join(cwd(), 'public', 'videos', basename)
+const getVideoPath = (basename = '') => join('content', 'video', basename)
 
-const getThumbnailPath = (basename: string) => join(cwd(), 'public', 'thumbnails', basename)
+const getThumbnailPath = (basename = '') => join('content', 'thumbnail', basename)
 
 const getContents = async (dto: GetContentsDto, user: User) => {
     const findManyArgs: Prisma.ContentFindManyArgs = {
@@ -57,7 +50,7 @@ const getContentFeeds = async (dto: GetContentFeedsDto) => {
                 select: {
                     id: true,
                     name: true,
-                    username: true,
+                    profileBasename: true,
                 },
             },
             _count: {
@@ -105,7 +98,6 @@ const getContentHistories = async (dto: GetContentHistoriesDto, user: User) => {
                         select: {
                             id: true,
                             name: true,
-                            username: true,
                         },
                     },
                     _count: {
@@ -148,22 +140,12 @@ const getContentHistories = async (dto: GetContentHistoriesDto, user: User) => {
 }
 
 const createContent = async (dto: CreateContentDto, user: User) => {
-    const videoFilename = `${Date.now()}${Math.round(Math.random() * 1E9)}`
-
-    const videoBasename = `${videoFilename}${extname(dto.video.name)}`
-
-    return await db.client.$transaction(async tx => {
-        const content = await tx.content.create({
-            data: {
-                title: dto.video.name,
-                videoBasename,
-                createdById: user.id,
-            },
-        })
-
-        await dto.video.mv(getVideoPath(videoBasename))
-
-        return content
+    return await db.client.content.create({
+        data: {
+            title: dto.video.name,
+            videoBasename: await filesystem.save(dto.video, getVideoPath()),
+            createdById: user.id,
+        },
     })
 }
 
@@ -174,7 +156,7 @@ const findContent = async (id: number, user?: User) => {
                 select: {
                     id: true,
                     name: true,
-                    username: true,
+                    profileBasename: true,
                     channelSubscriptions: {
                         select: {
                             id: true,
@@ -235,6 +217,7 @@ const findContent = async (id: number, user?: User) => {
                     select: {
                         id: true,
                         name: true,
+                        profileBasename: true,
                     },
                 },
                 _count: {
@@ -322,40 +305,22 @@ const updateContent = async (id: number, dto: UpdateContentDto) => {
         status: dto.status,
     }
 
-    let thumbnailBasename: string
-
     if (dto.thumbnail) {
-        const thumbnailFilename = `${Date.now()}${Math.round(Math.random() * 1E9)}`
-
-        thumbnailBasename = `${thumbnailFilename}${extname(dto.thumbnail.name)}`
-
-        data.thumbnailBasename = thumbnailBasename
+        data.thumbnailBasename = await filesystem.save(dto.thumbnail, getThumbnailPath())
     }
 
-    return await db.client.$transaction(async tx => {
-        const updatedContent = await tx.content.update({
-            where: {
-                id: content.id,
-            },
-            data,
-        })
-
-        if (thumbnailBasename && dto.thumbnail) {
-            if (content.thumbnailBasename) {
-                const thumbnailPath = getThumbnailPath(content.thumbnailBasename)
-
-                const thumbnailStats = await stat(thumbnailPath)
-
-                if (thumbnailStats.isFile()) {
-                    await rm(thumbnailPath)
-                }
-            }
-
-            await dto.thumbnail.mv(getThumbnailPath(thumbnailBasename))
-        }
-
-        return updatedContent
+    const updatedContent = await db.client.content.update({
+        data,
+        where: {
+            id: content.id,
+        },
     })
+
+    if (dto.thumbnail && content.thumbnailBasename) {
+        await filesystem.remove(getThumbnailPath(content.thumbnailBasename))
+    }
+
+    return updatedContent
 }
 
 const deleteContent = async (id: number) => {
@@ -494,6 +459,8 @@ const dislikeContent = async (id: number, user: User) => {
 }
 
 export {
+    getVideoPath,
+    getThumbnailPath,
     getContents,
     getContentFeeds,
     getContentHistories,

@@ -39,12 +39,6 @@ const setup = (app: Express) => {
             }
 
             const user = await db.client.user.findUnique({
-                select: {
-                  id: true,
-                  name: true,
-                  username: true,
-                  email: true,
-                },
                 where: {
                     id: +sub,
                 },

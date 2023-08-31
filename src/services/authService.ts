@@ -5,15 +5,7 @@ import { DateTime } from 'luxon'
 import { JwtPayload, sign, verify as verifyJwt } from 'jsonwebtoken'
 import { join } from 'path'
 import { cwd } from 'process'
-import {
-    ForgotPasswordDto,
-    LoginDto,
-    RefreshTokenDto,
-    RegisterDto,
-    ResetPasswordDto,
-    UpdatePasswordDto,
-    UpdateProfileDto
-} from '@/dto'
+import { ForgotPasswordDto, LoginDto, RefreshTokenDto, RegisterDto, ResetPasswordDto, UpdatePasswordDto } from '@/dto'
 import { NotFoundException, UnauthorizedException } from '@/exceptions'
 import { db, mail } from '@/utils'
 
@@ -138,7 +130,7 @@ const refresh = async (dto: RefreshTokenDto) => {
 
     const refreshToken = await db.client.refreshToken.findUnique({
         select: {
-          token: true,
+            token: true,
         },
         where: {
             userId,
@@ -214,19 +206,6 @@ const resetPassword = async (dto: ResetPasswordDto) => {
     })
 }
 
-const updateProfile = async (dto: UpdateProfileDto, user: User) => {
-    return await db.client.user.update({
-        data: {
-            name: dto.name,
-            username: dto.username,
-            email: dto.email,
-        },
-        where: {
-            id: user.id,
-        },
-    })
-}
-
 const updatePassword = async (dto: UpdatePasswordDto, user: User) => {
     await db.client.user.update({
         data: {
@@ -244,6 +223,5 @@ export {
     refresh,
     forgotPassword,
     resetPassword,
-    updateProfile,
     updatePassword,
 }

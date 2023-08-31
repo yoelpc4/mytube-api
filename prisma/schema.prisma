@@ -17,6 +17,8 @@ model User {
   username                String         @unique @db.VarChar(255)
   email                   String         @unique @db.VarChar(255)
   password                String         @db.VarChar(255)
+  profileBasename         String?        @db.VarChar(255)
+  bannerBasename          String?        @db.VarChar(255)
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
   refreshToken            RefreshToken?

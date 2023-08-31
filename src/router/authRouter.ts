@@ -5,11 +5,9 @@ import { auth } from '@/middlewares'
 import {
     IsCurrentPasswordMatchValidator,
     IsEmailExistsValidator,
-    IsEmailUniqueIgnoreAuthUserValidator,
     IsEmailUniqueValidator,
     IsPasswordConfirmationMatchValidator,
     IsResetPasswordTokenValidValidator,
-    IsUsernameUniqueIgnoreAuthUserValidator,
     IsUsernameUniqueValidator,
 } from '@/validators'
 
@@ -122,33 +120,6 @@ router.get(
     '/user',
     auth,
     authController.getUser
-)
-
-router.post(
-    '/update-profile',
-    auth,
-    body('name')
-        .notEmpty()
-        .bail()
-        .isString()
-        .bail()
-        .trim(),
-    body('username')
-        .notEmpty()
-        .bail()
-        .custom(IsUsernameUniqueIgnoreAuthUserValidator)
-        .bail()
-        .trim(),
-    body('email')
-        .notEmpty()
-        .bail()
-        .isEmail()
-        .bail()
-        .custom(IsEmailUniqueIgnoreAuthUserValidator)
-        .bail()
-        .trim()
-        .normalizeEmail(),
-    authController.updateProfile
 )
 
 router.post(

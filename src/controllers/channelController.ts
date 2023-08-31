@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes'
 import { validationResult } from 'express-validator'
 import { instanceToPlain, plainToInstance } from 'class-transformer'
 import { channelService } from '@/services'
-import { GetChannelContentsDto } from '@/dto'
+import { GetChannelContentsDto, UpdateChannelDto } from '@/dto'
 import {
     AlreadySubscribedToChannelException,
     NeverSubscribedToChannelException,
@@ -61,7 +61,7 @@ const getChannelContents = async (req: Request, res: Response) => {
         console.log(error)
 
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: 'Get channel contents failed'
+            message: 'Get channel content failed'
         })
     }
 }
@@ -132,9 +132,40 @@ const unsubscribe = async (req: Request, res: Response) => {
     }
 }
 
+const updateChannel = async (req: Request, res: Response) => {
+    const errors = validationResult(req)
+
+    if (!errors.isEmpty()) {
+        return sendValidationErrorResponse(res, errors.array())
+    }
+
+    const dto = plainToInstance(UpdateChannelDto, {
+        name: req.body.name,
+        username: req.body.username,
+        email: req.body.email,
+        profile: req.files?.profile,
+        banner: req.files?.banner,
+    }, {excludeExtraneousValues: true})
+
+    try {
+        const user = await channelService.updateChannel(dto, req.user as User)
+
+        const userResource = instanceToPlain(new UserResource(user))
+
+        return res.status(StatusCodes.OK).json(userResource)
+    } catch (error) {
+        console.log(error)
+
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: 'Failed to update channel',
+        })
+    }
+}
+
 export {
     findChannel,
     getChannelContents,
     subscribe,
     unsubscribe,
+    updateChannel,
 }

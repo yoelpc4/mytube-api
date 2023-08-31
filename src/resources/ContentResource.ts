@@ -1,8 +1,8 @@
 import { Content, Prisma } from '@prisma/client'
 import { Exclude, Expose, Transform } from 'class-transformer'
-import { join } from 'path'
 import { UserResource } from '@/resources'
-import { getFileUrl } from '@/helpers'
+import { contentService } from '@/services';
+import { filesystem } from '@/utils';
 
 export class ContentResource {
     id: number
@@ -14,7 +14,7 @@ export class ContentResource {
     videoBasename?: string
 
     @Expose()
-    @Transform(({ obj }) => getFileUrl(join('videos', obj.videoBasename)), { toPlainOnly: true })
+    @Transform(({obj}) => filesystem.getUrl(contentService.getVideoPath(obj.videoBasename)), {toPlainOnly: true})
     videoUrl?: string
 
     tags?: string | null
@@ -24,7 +24,7 @@ export class ContentResource {
     thumbnailBasename?: string | null
 
     @Expose()
-    @Transform(({ obj }) => obj.thumbnailBasename ? getFileUrl(join('thumbnails', obj.thumbnailBasename)) : null, { toPlainOnly: true })
+    @Transform(({obj}) => obj.thumbnailBasename ? filesystem.getUrl(contentService.getThumbnailPath(obj.thumbnailBasename)) : null, {toPlainOnly: true})
     thumbnailUrl?: string | null
 
     createdAt?: Date
@@ -32,13 +32,13 @@ export class ContentResource {
     updatedAt?: Date
 
     @Expose()
-    @Transform(({ value }) => value ? new UserResource(value) : null, { toPlainOnly: true })
+    @Transform(({value}) => value ? new UserResource(value) : null, {toPlainOnly: true})
     createdBy?: UserResource
 
     createdById?: number
 
     @Expose()
-    @Transform(({ obj }) => obj._count?.contentViews, { toPlainOnly: true })
+    @Transform(({obj}) => obj._count?.contentViews, {toPlainOnly: true})
     viewsCount?: number
 
     likesCount?: number
@@ -50,7 +50,7 @@ export class ContentResource {
     isDisliked?: boolean
 
     @Expose()
-    @Transform(({ value }) => Array.isArray(value) ? value.map((relatedContent: Content) => new ContentResource(relatedContent)) : [], { toPlainOnly: true })
+    @Transform(({value}) => Array.isArray(value) ? value.map((relatedContent: Content) => new ContentResource(relatedContent)) : [], {toPlainOnly: true})
     relatedContents?: ContentResource[]
 
     @Exclude()

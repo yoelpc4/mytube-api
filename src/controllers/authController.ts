@@ -6,15 +6,7 @@ import { StatusCodes } from 'http-status-codes'
 import { DateTime } from 'luxon';
 import { authService } from '@/services'
 import { UserResource } from '@/resources'
-import {
-    ForgotPasswordDto,
-    LoginDto,
-    RefreshTokenDto,
-    RegisterDto,
-    ResetPasswordDto,
-    UpdatePasswordDto,
-    UpdateProfileDto
-} from '@/dto'
+import { ForgotPasswordDto, LoginDto, RefreshTokenDto, RegisterDto, ResetPasswordDto, UpdatePasswordDto } from '@/dto'
 import { UnauthorizedException } from '@/exceptions'
 import { sendValidationErrorResponse } from '@/helpers';
 
@@ -207,28 +199,6 @@ const logout = (req: Request, res: Response) => res
 
 const getUser = (req: Request, res: Response) => res.json(instanceToPlain(new UserResource(req.user as User)))
 
-const updateProfile = async (req: Request, res: Response) => {
-    const errors = validationResult(req)
-
-    if (!errors.isEmpty()) {
-        return sendValidationErrorResponse(res, errors.array())
-    }
-
-    const dto = plainToInstance(UpdateProfileDto, req.body, {excludeExtraneousValues: true})
-
-    try {
-        const user = await authService.updateProfile(dto, req.user as User)
-
-        return instanceToPlain(new UserResource(user))
-    } catch (error) {
-        console.log(error)
-
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: 'Failed to update profile',
-        })
-    }
-}
-
 const updatePassword = async (req: Request, res: Response) => {
     const errors = validationResult(req)
 
@@ -261,6 +231,5 @@ export {
     resetPassword,
     logout,
     getUser,
-    updateProfile,
     updatePassword,
 }
