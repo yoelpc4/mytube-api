@@ -49,6 +49,7 @@ const getContentFeeds = async (dto: GetContentFeedsDto) => {
             createdBy: {
                 select: {
                     id: true,
+                    username: true,
                     name: true,
                     profileBasename: true,
                 },
@@ -155,6 +156,7 @@ const findContent = async (id: number, user?: User) => {
             createdBy: {
                 select: {
                     id: true,
+                    username: true,
                     name: true,
                     profileBasename: true,
                     channelSubscriptions: {
