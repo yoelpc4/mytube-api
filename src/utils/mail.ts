@@ -12,7 +12,6 @@ const transport = createTransport({
             pass: process.env.MAIL_PASS,
         }
     }),
-    logger: true,
 })
 
 const send = async (to: string, subject: string, data: object, templatePath: string) => {
