@@ -23,8 +23,6 @@ app.use(helmet({
     },
 }))
 
-app.use(hpp())
-
 app.use(cors({
     origin: process.env.CORS_ALLOWED_ORIGIN?.split(','),
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -39,6 +37,8 @@ app.use(express.json())
 app.use(express.urlencoded({
     extended: true,
 }))
+
+app.use(hpp())
 
 app.use(express.static('public'))
 
