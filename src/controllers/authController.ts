@@ -107,11 +107,15 @@ const login = async (req: Request, res: Response) => {
 }
 
 const refresh = async (req: Request, res: Response) => {
-    const dto = plainToInstance(
-        RefreshTokenDto,
-        {token: req.cookies[refreshTokenCookieName]},
-        {excludeExtraneousValues: true}
-    )
+    const token = req.cookies[refreshTokenCookieName]
+
+    if (!token) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+            message: 'Invalid refresh token',
+        })
+    }
+
+    const dto = plainToInstance(RefreshTokenDto, {token},{excludeExtraneousValues: true})
 
     try {
         const accessToken = await authService.refresh(dto)
@@ -126,7 +130,7 @@ const refresh = async (req: Request, res: Response) => {
         console.log(error)
 
         return res.status(StatusCodes.UNAUTHORIZED).json({
-            message: 'Unauthenticated',
+            message: 'Invalid refresh token',
         })
     }
 }
@@ -185,19 +189,23 @@ const resetPassword = async (req: Request, res: Response) => {
     }
 }
 
-const logout = (req: Request, res: Response) => res
-    .status(StatusCodes.NO_CONTENT)
-    .clearCookie(accessTokenCookieName, {
-        domain: jwtCookieDomain,
-        path: '/',
-    })
-    .clearCookie(refreshTokenCookieName, {
-        domain: jwtCookieDomain,
-        path: '/',
-    })
-    .send()
+const logout = (req: Request, res: Response) => {
+    res
+        .status(StatusCodes.NO_CONTENT)
+        .clearCookie(accessTokenCookieName, {
+            domain: jwtCookieDomain,
+            path: '/',
+        })
+        .clearCookie(refreshTokenCookieName, {
+            domain: jwtCookieDomain,
+            path: '/',
+        })
+        .send()
+}
 
-const getUser = (req: Request, res: Response) => res.json(instanceToPlain(new UserResource(req.user as User)))
+const getUser = (req: Request, res: Response) => {
+    res.json(instanceToPlain(new UserResource(req.user as User)))
+}
 
 const updatePassword = async (req: Request, res: Response) => {
     const errors = validationResult(req)

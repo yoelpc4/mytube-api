@@ -123,7 +123,7 @@ const refresh = async (dto: RefreshTokenDto) => {
     })
 
     if (!sub) {
-        throw new NotFoundException('Undefined sub')
+        throw new UnauthorizedException('Invalid refresh token')
     }
 
     const userId = +sub
@@ -138,13 +138,13 @@ const refresh = async (dto: RefreshTokenDto) => {
     })
 
     if (!refreshToken) {
-        throw new NotFoundException('Refresh token not found')
+        throw new UnauthorizedException('Invalid refresh token')
     }
 
     const isRefreshTokenMatch = await verifyHash(refreshToken.token, dto.token)
 
     if (!isRefreshTokenMatch) {
-        throw new UnauthorizedException('Refresh token not match')
+        throw new UnauthorizedException('Invalid refresh token')
     }
 
     return signAccessToken(userId)

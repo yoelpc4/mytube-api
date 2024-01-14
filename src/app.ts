@@ -1,19 +1,15 @@
+import 'dotenv/config'
+import 'reflect-metadata'
 import cookieParser from 'cookie-parser';
 import cors from 'cors'
-import dotenv from 'dotenv'
 import express from 'express'
 import fileUpload from 'express-fileupload'
 import helmet from 'helmet'
 import hpp from 'hpp';
 import { join } from 'path'
 import { cwd } from 'process'
-import 'reflect-metadata'
 import router from '@/router'
 import { auth } from '@/utils'
-
-dotenv.config()
-
-const port = process.env.APP_PORT ?? 3000
 
 const app = express()
 
@@ -56,5 +52,7 @@ auth.setup(app)
 app.set('trust proxy', 1) // troubleshoot proxy issue on rate limit
 
 app.use('/', router)
+
+const port = process.env.APP_PORT ?? 3000
 
 app.listen(port, () => console.log(`Server is listening on port ${port}`))
